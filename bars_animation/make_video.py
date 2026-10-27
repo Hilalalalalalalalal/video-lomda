@@ -7,6 +7,7 @@ Requires: numpy, pillow, librosa, ffmpeg.
 Usage:
   python3 make_video.py            ->  bars.mp4          (1920x1080, 3 characters)
   python3 make_video.py vertical   ->  bars_vertical.mp4 (1080x1920 story, 4 characters)
+  python3 make_video.py vertical vote  ->  bars_vertical_vote.mp4 (title from TITLES["vote"])
 """
 import itertools
 import os
@@ -120,7 +121,7 @@ def notebook_background():
     return Image.fromarray(np.clip(np.asarray(bg) * v[..., None], 0, 255).astype(np.uint8))
 
 
-TITLE = "אז מה יהיה?"
+TITLES = {"": "אז מה יהיה?", "vote": "צאו להצביע!"}
 TITLE_FONT = os.path.join(HERE, "assets", "fonts", "AmaticSC-Bold.ttf")
 TITLE_TILT = 3                 # degrees, for a hand-written feel
 WRITE_T = (0.2, 1.3)           # seconds: title is written on, right to left
@@ -128,15 +129,15 @@ MARK_T = (1.5, 2.6)            # seconds: highlighter sweeps over it, right to l
 MARKER_OUT = 0.5               # seconds for the marker to lift away
 
 
-def title_layers(center, size):
+def title_layers(title, center, size):
     """Full-frame RGBA layers for the hand-written title and its highlighter band."""
     font = ImageFont.truetype(TITLE_FONT, size)
     probe = ImageDraw.Draw(Image.new("L", (1, 1)))
-    l, t, r, b = probe.textbbox((0, 0), TITLE, font=font, anchor="mm", direction="rtl")
+    l, t, r, b = probe.textbbox((0, 0), title, font=font, anchor="mm", direction="rtl")
     pad = size
     cw, ch = r - l + 2 * pad, b - t + 2 * pad
     text = Image.new("RGBA", (cw, ch))
-    ImageDraw.Draw(text).text((cw / 2, ch / 2), TITLE, font=font, fill=(28, 38, 78, 255),
+    ImageDraw.Draw(text).text((cw / 2, ch / 2), title, font=font, fill=(28, 38, 78, 255),
                               anchor="mm", direction="rtl")
     # highlighter band: a slightly wobbly stroke with streaky density, a bit wider than the text
     band = Image.new("L", (cw, ch))
@@ -248,14 +249,14 @@ def pump(t, beats, strength):
     return PUMP * strength[j] * math.exp(-(t - beats[j]) / 0.12)
 
 
-def render(fmt):
+def render(fmt, variant=""):
     global W, H
     cfg = FORMATS[fmt]
     W, H = cfg["size"]
     SLOTS_X, LEVELS_Y = cfg["slots_x"], cfg["levels_y"]
     sprites = load_sprites(cfg["chars"], cfg["figure_h"])
     bg = notebook_background()
-    hl, text, (hx0, hx1) = title_layers(cfg["title_xy"], cfg["title_size"])
+    hl, text, (hx0, hx1) = title_layers(TITLES[variant], cfg["title_xy"], cfg["title_size"])
     tb = text.getbbox()
     marker, (mtx, mty) = marker_sprite(cfg["title_size"])
     tilt = math.tan(math.radians(TITLE_TILT))
@@ -263,7 +264,8 @@ def render(fmt):
     changes = schedule(len(sprites), beats, loud)
     total = DURATION
     n_frames = int(total * FPS)
-    out = os.path.join(HERE, cfg["out"])
+    name, ext = os.path.splitext(cfg["out"])
+    out = os.path.join(HERE, f"{name}_{variant}{ext}" if variant else cfg["out"])
     ff = subprocess.Popen(
         ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
          "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
@@ -315,4 +317,4 @@ def render(fmt):
 
 
 if __name__ == "__main__":
-    render(sys.argv[1] if len(sys.argv) > 1 else "horizontal")
+    render(sys.argv[1] if len(sys.argv) > 1 else "horizontal", *sys.argv[2:3])
