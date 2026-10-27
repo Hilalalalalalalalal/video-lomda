@@ -1,5 +1,8 @@
 """Animated "rising / falling bars" video: characters on red pillars over a
-math-notebook (graph paper) background. Bars keep swapping between high and low.
+math-notebook (graph paper) background. Bars swap between high and low in time with the
+music (assets/music.mp3 from MUSIC_START), and pump on every beat.
+
+Requires: numpy, pillow, librosa, ffmpeg.
 
 Usage:
   python3 make_video.py            ->  bars.mp4          (1920x1080, 3 characters)
@@ -11,15 +14,19 @@ import random
 import subprocess
 import sys
 
-import numpy as np
 import math
 
+import librosa
+import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FPS = 30
-HOLD, MOVE = 1.0, 1.1          # seconds a ranking is held / seconds of transition
-STEPS = 12                     # ranking changes before the video returns to its start
+DURATION = 30.0                # seconds of video
+MUSIC = os.path.join(HERE, "assets", "music.mp3")
+MUSIC_START = 23.0             # seconds into the song where the video starts
+FADE_OUT = 1.5                 # seconds of audio fade at the end
+PUMP = 16                      # px the bars jump on a strong beat
 
 # file, row to cut the pillar at (below the shoes), region to blank out (phone UI icon)
 CHARACTERS = {
@@ -193,17 +200,52 @@ def ease(t):
     return ((2 * t - 2) ** 2 * ((c + 1) * (2 * t - 2) + c) + 2) / 2
 
 
-def schedule(n):
-    # random rankings where at least two bars move each step; ends back on the first one
-    # so the video loops cleanly
+def analyse_music():
+    """Beat times (seconds from video start), their strength 0..1, and whether each beat is
+    in a loud part of the song."""
+    y, sr = librosa.load(MUSIC, sr=22050, offset=MUSIC_START, duration=DURATION)
+    _, frames = librosa.beat.beat_track(y=y, sr=sr)
+    beats = librosa.frames_to_time(frames, sr=sr)
+    onset = librosa.onset.onset_strength(y=y, sr=sr)
+    strength = onset[frames] / onset[frames].max()
+    rms = librosa.feature.rms(y=y)[0]
+    rms = np.convolve(rms, np.ones(86) / 86, mode="same")     # ~2 s window
+    loud = rms[np.minimum(frames, len(rms) - 1)] > 0.8 * np.median(rms)
+    return beats, strength, loud
+
+
+def schedule(n, beats, loud):
+    """Ranking changes that land on the beat: every 2 beats in loud parts, every 4 in quiet
+    ones. Returns [(land_time, move_seconds, ranking)], starting with the initial ranking."""
     rng = random.Random(7)
     perms = list(itertools.permutations(range(n)))
-    seq = [tuple(range(n))]
-    while len(seq) < STEPS:
+    period = float(np.median(np.diff(beats)))
+    changes = [(0.0, 0.0, tuple(range(n)))]
+    i = 2                                      # leave the first beats for the title
+    while i < len(beats) and beats[i] < DURATION - 1.5:
         p = rng.choice(perms)
-        if sum(a != b for a, b in zip(p, seq[-1])) >= min(3, n) and (len(seq) < STEPS - 1 or p != seq[0]):
-            seq.append(p)
-    return seq + [seq[0]]
+        if sum(a != b for a, b in zip(p, changes[-1][2])) >= min(3, n):
+            changes.append((beats[i], 0.85 * period, p))
+            i += 2 if loud[i] else 4
+    return changes
+
+
+def bar_levels(t, changes):
+    """Fractional level index of every bar at time t."""
+    k = max(j for j, c in enumerate(changes) if c[0] - c[1] <= t)
+    land, move, cur = changes[k]
+    prev = changes[k - 1][2] if k else cur
+    p = ease(min((t - (land - move)) / move, 1.0)) if move else 1.0
+    return [a + (b - a) * p for a, b in zip(prev, cur)]
+
+
+def pump(t, beats, strength):
+    """Upward kick right on each beat that decays quickly."""
+    past = beats <= t
+    if not past.any():
+        return 0.0
+    j = np.flatnonzero(past)[-1]
+    return PUMP * strength[j] * math.exp(-(t - beats[j]) / 0.12)
 
 
 def render(fmt):
@@ -217,21 +259,23 @@ def render(fmt):
     tb = text.getbbox()
     marker, (mtx, mty) = marker_sprite(cfg["title_size"])
     tilt = math.tan(math.radians(TITLE_TILT))
-    seq = schedule(len(sprites))
-    step = HOLD + MOVE
-    total = (len(seq) - 1) * step + HOLD
+    beats, strength, loud = analyse_music()
+    changes = schedule(len(sprites), beats, loud)
+    total = DURATION
     n_frames = int(total * FPS)
     out = os.path.join(HERE, cfg["out"])
     ff = subprocess.Popen(
         ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
-         "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", "slow",
-         "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", out],
+         "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
+         "-ss", str(MUSIC_START), "-t", str(DURATION), "-i", MUSIC,
+         "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "slow", "-crf", "18",
+         "-pix_fmt", "yuv420p", "-af", f"afade=t=out:st={DURATION - FADE_OUT}:d={FADE_OUT}",
+         "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", out],
         stdin=subprocess.PIPE)
     for f in range(n_frames):
         t = f / FPS
-        k = min(int(t // step), len(seq) - 2)
-        local = t - k * step
-        p = 0.0 if local < HOLD else ease(min((local - HOLD) / MOVE, 1.0))
+        levels = bar_levels(t, changes)
+        kick = pump(t, beats, strength)
         frame = bg.copy()
         # title: written on right-to-left, then highlighted right-to-left with a moving marker
         pm = progress(t, MARK_T)
@@ -255,9 +299,8 @@ def render(fmt):
                 m.putalpha(m.getchannel("A").point(lambda v: int(v * (1 - lift))))
             frame.paste(m, (mx, my), m)
         for i, (img, top, strip) in enumerate(sprites):
-            y0 = LEVELS_Y[seq[k][i]]
-            y1 = LEVELS_Y[seq[k + 1][i]]
-            pillar_y = y0 + (y1 - y0) * p
+            # levels are evenly spaced; extrapolate so the ease overshoot isn't clipped
+            pillar_y = LEVELS_Y[0] + levels[i] * (LEVELS_Y[1] - LEVELS_Y[0]) - kick
             x = round(SLOTS_X[i] - img.width / 2)
             y = round(pillar_y - top)
             ext_top = y + img.height - 1
