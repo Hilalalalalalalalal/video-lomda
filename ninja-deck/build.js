@@ -20,7 +20,7 @@ const THEME = {
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE"; // 13.333 x 7.5
 pres.rtlMode = true;
-pres.title = "ספורט נינג'ה - המסע של שרד";
+pres.title = "תחביב נינג'ה - המסע של שרד";
 pres.author = "שרד";
 pres.theme = { headFontFace: "Calibri", bodyFontFace: "Calibri" };
 const C = pres.SchemeColor;
@@ -75,7 +75,7 @@ pres.addSection({ title: "פתיחה" });
   const pw = 3.75, ph = photoH("p3", pw);
   IMG(s, "photo-reach.jpg", 0.9, 0.85, pw, ph, "A03zoom-photo");
   IMG(s, "tape.png", 2.2, 0.62, 1.35, 0.42, "A04fade-tape", { rotate: -8 });
-  s.addText("ספורט נינג'ה", { placeholder: "title", rtlMode: true, lang: "he-IL", objectName: "A01flyR-title" });
+  s.addText("תחביב נינג'ה", { placeholder: "title", rtlMode: true, lang: "he-IL", objectName: "A01flyR-title" });
   TXT(s, "המסע של שרד בעולם המכשולים", { x: 5.0, y: 3.2, w: 7.7, h: 0.8, fontSize: 36, bold: true, color: C.accent1, objectName: "A02flyR-sub" });
   TXT(s, "כיתה ג׳  ·  מתנ״ס פרדס חנה", { x: 5.0, y: 4.05, w: 7.7, h: 0.6, fontSize: 24, color: C.text2, objectName: "A05fade-sub2" });
   IMG(s, "fig-hero.png", 10.6, 4.75, 1.9, 2.28, "A06flyB-hero");
