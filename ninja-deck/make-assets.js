@@ -13,20 +13,12 @@ const out = (n) => path.join(OUT, n);
 
 // ----- backgrounds -----
 async function backgrounds() {
-  // light: graph paper
-  let g = `<rect width="1334" height="750" fill="#FFFFFF"/>`;
-  for (let x = 0; x <= 1334; x += 50) g += `<line x1="${x}" y1="0" x2="${x}" y2="750" stroke="#DCE8F7" stroke-width="2"/>`;
-  for (let y = 0; y <= 750; y += 50) g += `<line x1="0" y1="${y}" x2="1334" y2="${y}" stroke="#DCE8F7" stroke-width="2"/>`;
-  await sharp(Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="1334" height="750">${g}</svg>`)).jpeg({ quality: 92 }).toFile(out("bg-light.jpg"));
-  // dark: navy with chalk sketches
-  const R = mkR(99);
-  let d = `<rect width="1334" height="750" fill="#0B1B3A"/>`;
-  for (let x = 0; x <= 1334; x += 50) d += `<line x1="${x}" y1="0" x2="${x}" y2="750" stroke="#16295A" stroke-width="2"/>`;
-  for (let y = 0; y <= 750; y += 50) d += `<line x1="0" y1="${y}" x2="1334" y2="${y}" stroke="#16295A" stroke-width="2"/>`;
-  d += A.line(R, 480, 690, 1300, 690, "#23407F", 6, 3);
-  d += A.line(R, 520, 60, 1320, 60, "#23407F", 6, 3);
-  d += A.sparkle(R, 1230, 130, 16, "#FFC933", 5) + A.sparkle(R, 560, 640, 12, "#1D9BF0", 4) + A.sparkle(R, 1280, 620, 10, "#E63946", 4);
-  await sharp(Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="1334" height="750">${d}</svg>`)).jpeg({ quality: 92 }).toFile(out("bg-dark.jpg"));
+  await sharp({ create: { width: 1334, height: 750, channels: 3, background: "#F7F9FD" } }).jpeg({ quality: 95 }).toFile(out("bg-light.jpg"));
+  // title: soft pastel with large translucent circles
+  const t = `<rect width="1334" height="750" fill="#E8F1FC"/>
+  <circle cx="1230" cy="90" r="260" fill="#FBE3E6"/><circle cx="1100" cy="700" r="230" fill="#FFF1C9"/>
+  <circle cx="520" cy="760" r="170" fill="#DDF3E8"/><circle cx="470" cy="40" r="110" fill="#E7E0F7"/>`;
+  await sharp(Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="1334" height="750">${t}</svg>`)).jpeg({ quality: 95 }).toFile(out("bg-dark.jpg"));
 }
 
 // ----- photos in sketchy frames -----
@@ -35,7 +27,7 @@ async function polaroid(src, crop, file, W = 800, b = 22) {
   const m = await sharp(buf).metadata();
   const CW = m.width + 2 * b, CH = m.height + 2 * b;
   const R = mkR(W);
-  const outline = A.poly(R, [[3, 3], [CW - 3, 3], [CW - 3, CH - 3], [3, CH - 3]], INK, 5, true, 2, 6);
+  const outline = A.poly(R, [[2, 2], [CW - 2, 2], [CW - 2, CH - 2], [2, CH - 2]], "#C9D3E6", 4, true, 0, 0);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${CW}" height="${CH}" viewBox="0 0 ${CW} ${CH}">${outline}</svg>`;
   await sharp({ create: { width: CW, height: CH, channels: 3, background: "#FFFFFF" } })
     .composite([{ input: buf, left: b, top: b }, { input: Buffer.from(svg), left: 0, top: 0 }])
@@ -58,8 +50,9 @@ function posters() {
   execSync(`ffmpeg -v error -y -ss 10 -i ${out("video2.mp4")} -frames:v 1 ${out("poster2.jpg")}`);
 }
 
-// ----- sketch art -----
+// ----- art -----
 async function art() {
+  A.setStyle({ j: 0.3, w: 0.62, p: 0 });
   // figures: dark ink for light slides, white ink for dark slides
   for (const p of ["pullup", "toes", "swing", "wall", "rings", "hero"]) await A.figure(p, out(`fig-${p}.png`), INK, 5 + p.length);
   await A.figure("hero", out("fig-hero-white.png"), "#FFFFFF", 21);
@@ -74,22 +67,6 @@ async function art() {
   await A.render(A.highlight(R, 870, 90, YEL, 0.9), 870, 90, out("hl-wide.png"));
   await A.render(A.highlight(mkR(4), 130, 40, "#FFE680", 0.8), 130, 40, out("tape.png"));
 
-  // cards  (name, w, h in inches*100)
-  const cards = {
-    "card-w": [350, 390, "#FFFFFF"], "card-fact": [1210, 130, "#FFF1BF"],
-    "card-big": [510, 420, "#FFE3E5"], "card-row": [660, 125, "#FFFFFF"],
-    "card-step": [550, 150, "#FFFFFF"], "card-step-y": [550, 150, "#FFF1BF"],
-    "card-vid": [340, 540, "#FFFFFF"], "chip-side": [230, 110, "#E4F3FF"],
-    "chip-blue": [260, 110, "#D6EDFF"], "chip-red": [260, 110, "#FFD9DC"], "chip-yel": [260, 110, "#FFF1BF"], "chip-grn": [260, 110, "#D8F5DC"],
-    "card-skill": [390, 360, "#FFFFFF"], "card-term": [600, 260, "#FFFFFF"], "card-term-b": [600, 260, "#EAF5FF"],
-    "card-small": [285, 360, "#FFFFFF"], "card-banner": [1210, 135, "#14213D"], "card-note": [220, 150, "#E4F3FF"],
-  };
-  let seed = 1;
-  for (const [n, [w, h, fill]] of Object.entries(cards)) {
-    const dark = fill === "#14213D";
-    await A.render(A.card(w, h, { fill, seed: seed++, stroke: dark ? "#FFC933" : INK, shadow: !dark }), w, h, out(`${n}.png`), 2);
-  }
-
   // arrows (all hand-drawn). name, w,h(px), x0,y0,x1,y1,bend,color
   const arrows = [
     ["arr-left", 70, 60, 64, 36, 8, 24, -12, RED],       // right -> left (RTL flow)
@@ -98,7 +75,7 @@ async function art() {
     ["arr-left-long", 250, 80, 240, 55, 12, 22, -22, YEL],
     ["arr-left-blue", 90, 60, 84, 34, 8, 26, -12, BLUE],
   ];
-  for (const [n, w, h, x0, y0, x1, y1, bend, col] of arrows) await A.render(A.arrow(w, h, x0, y0, x1, y1, bend, col, 6, w), w, h, out(`${n}.png`));
+  for (const [n, w, h, x0, y0, x1, y1, bend, col] of arrows) await A.render(A.arrow(w, h, x0, y0, x1, y1, bend, col, 5, w), w, h, out(`${n}.png`));
 }
 
 (async () => {

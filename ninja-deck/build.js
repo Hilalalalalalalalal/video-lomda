@@ -11,8 +11,8 @@ const THEME = {
   headFontFace: "Calibri",
   bodyFontFace: "Calibri",
   colors: {
-    dk1: "14213D", lt1: "FFFFFF", dk2: "0B1B3A", lt2: "F1F5FB",
-    accent1: "E63946", accent2: "1D9BF0", accent3: "FFC933", accent4: "2EC4B6", accent5: "7B2CBF", accent6: "FF8C42",
+    dk1: "2F3B5C", lt1: "FFFFFF", dk2: "5B6B93", lt2: "F7F9FD",
+    accent1: "E4767E", accent2: "5A9BD5", accent3: "F2C14E", accent4: "4DB596", accent5: "9B8AD8", accent6: "EE9B5B",
     hlink: "1D9BF0", folHlink: "7B2CBF",
   },
 };
@@ -31,20 +31,38 @@ pres.defineSlideMaster({
   title: "NINJA_LIGHT",
   background: { path: AS("bg-light.jpg") },
   objects: [
-    { image: { x: 0.65, y: 0.4, w: 0.75, h: 0.96, path: AS("bolt.png") } },
-    { placeholder: { options: { name: "title", type: "title", x: 1.6, y: 0.35, w: 11.1, h: 1.05, fontFace: FONT, fontSize: 44, bold: true, color: C.text1, align: "right", valign: "middle", margin: 0 }, text: "" } },
+    { placeholder: { options: { name: "title", type: "title", x: 0.6, y: 0.35, w: 12.13, h: 1.05, fontFace: FONT, fontSize: 40, bold: true, color: C.text1, align: "right", valign: "middle", margin: 0 }, text: "" } },
   ],
 });
 pres.defineSlideMaster({
   title: "NINJA_DARK",
   background: { path: AS("bg-dark.jpg") },
   objects: [
-    { placeholder: { options: { name: "title", type: "title", x: 5.0, y: 1.15, w: 7.7, h: 1.9, fontFace: FONT, fontSize: 88, bold: true, color: C.background1, align: "right", valign: "middle", margin: 0 }, text: "" } },
+    { placeholder: { options: { name: "title", type: "title", x: 5.0, y: 1.15, w: 7.7, h: 1.9, fontFace: FONT, fontSize: 88, bold: true, color: C.text1, align: "right", valign: "middle", margin: 0 }, text: "" } },
   ],
 });
 
 // ---------- helpers ----------
-const IMG = (slide, file, x, y, w, h, name, extra = {}) =>
+const FILLS = {
+  "card-w": "FFFFFF", "card-big": "FBE4E7", "card-row": "FFFFFF", "card-step": "FFFFFF", "card-step-y": "FFF3CF",
+  "card-skill": "FFFFFF", "card-term": "FFFFFF", "card-term-b": "E7F1FB", "card-small": "FFFFFF", "card-banner": "5B6B93",
+  "hl-wide": "FFF0C2", "chip-blue": "DDEBFA", "chip-red": "FBE1E3", "chip-yel": "FFF3CF", "chip-grn": "DCF3E6",
+};
+const IMG = (slide, file, x, y, w, h, name, extra = {}) => {
+  const base = file.replace(/\.png$/, "");
+  if (base === "tape") return;
+  if (FILLS[base]) {
+    const chip = base.startsWith("chip") || base === "hl-wide";
+    return slide.addShape(pres.ShapeType.roundRect, {
+      x, y, w, h, rectRadius: chip ? 0.35 : 0.18, objectName: name,
+      fill: { color: FILLS[base] },
+      line: (base === "card-banner" || base === "hl-wide") ? { type: "none" } : { color: "DCE4F2", width: 1 },
+      shadow: (base === "card-banner" || base === "hl-wide") ? undefined : { type: "outer", color: "8FA3C8", opacity: 0.22, blur: 10, offset: 3, angle: 90 },
+    });
+  }
+  return IMG0(slide, file, x, y, w, h, name, extra);
+};
+const IMG0 = (slide, file, x, y, w, h, name, extra = {}) =>
   slide.addImage({ path: AS(file), x, y, w, h, objectName: name, altText: "", ...extra });
 const TXT = (slide, runs, o) =>
   slide.addText(runs, { fontFace: FONT, rtlMode: true, lang: "he-IL", align: "right", valign: "middle", margin: 0, isTextBox: true, color: C.text1, ...o });
@@ -55,14 +73,12 @@ pres.addSection({ title: "פתיחה" });
 {
   const s = pres.addSlide({ masterName: "NINJA_DARK", sectionTitle: "פתיחה" });
   const pw = 3.75, ph = photoH("p3", pw);
-  IMG(s, "photo-reach.jpg", 0.9, 0.85, pw, ph, "A03zoom-photo", { rotate: -4 });
+  IMG(s, "photo-reach.jpg", 0.9, 0.85, pw, ph, "A03zoom-photo");
   IMG(s, "tape.png", 2.2, 0.62, 1.35, 0.42, "A04fade-tape", { rotate: -8 });
   s.addText("ספורט נינג'ה", { placeholder: "title", rtlMode: true, lang: "he-IL", objectName: "A01flyR-title" });
-  TXT(s, "המסע של שרד בעולם המכשולים", { x: 5.0, y: 3.2, w: 7.7, h: 0.8, fontSize: 36, bold: true, color: C.accent3, objectName: "A02flyR-sub" });
-  TXT(s, "כיתה ג׳  ·  מתנ״ס פרדס חנה", { x: 5.0, y: 4.05, w: 7.7, h: 0.6, fontSize: 24, color: C.background1, objectName: "A05fade-sub2" });
-  IMG(s, "fig-hero-white.png", 10.6, 4.75, 1.9, 2.28, "A06flyB-hero");
-  IMG(s, "arr-left-long.png", 6.6, 5.55, 2.5, 0.8, "A07wipeR-arrow");
-  IMG(s, "sparkle.png", 4.9, 0.6, 0.6, 0.6, "A09zoom-sp1");
+  TXT(s, "המסע של שרד בעולם המכשולים", { x: 5.0, y: 3.2, w: 7.7, h: 0.8, fontSize: 36, bold: true, color: C.accent1, objectName: "A02flyR-sub" });
+  TXT(s, "כיתה ג׳  ·  מתנ״ס פרדס חנה", { x: 5.0, y: 4.05, w: 7.7, h: 0.6, fontSize: 24, color: C.text2, objectName: "A05fade-sub2" });
+  IMG(s, "fig-hero.png", 10.6, 4.75, 1.9, 2.28, "A06flyB-hero");
   s.addNotes("שלום לכולם! קוראים לי שרד, ואני אספר לכם על ספורט שאני אוהבת: נינג'ה.\n\n(אפשר להחליף לגוף ראשון - ״אני״ - אם שרד היא זו שמציגה.)");
 }
 
@@ -95,7 +111,6 @@ pres.addSection({ title: "היסטוריה" });
   IMG(s, "icon-medal.png", 9.3, 1.85, 1.7, 1.7, "A03zoom-medal");
   TXT(s, "לוס אנג'לס 2028", { x: 7.8, y: 3.6, w: 4.7, h: 0.75, fontSize: 38, bold: true, color: C.accent1, align: "center", objectName: "A03fade-la" });
   TXT(s, "מסלול מכשולים\nבהשראת נינג'ה", { x: 8.0, y: 4.4, w: 4.3, h: 1.3, fontSize: 26, align: "center", valign: "top", objectName: "A03fade-la2" });
-  IMG(s, "star.png", 12.0, 1.4, 0.8, 0.8, "A09zoom-star");
   const rows = [
     { icon: "icon-globe.png", t: "בחמשת הקרב המודרני" },
     { icon: "icon-bolt", t: "במקום רכיבה על סוסים" },
@@ -118,8 +133,8 @@ pres.addSection({ title: "שרד" });
   const s = pres.addSlide({ masterName: "NINJA_LIGHT", sectionTitle: "שרד" });
   s.addText("שרד והנינג'ה", { placeholder: "title", rtlMode: true, lang: "he-IL", objectName: "A01fade-title" });
   const w1 = 3.05, w2 = 3.2;
-  IMG(s, "photo-hang.jpg", 0.65, 1.75, w1, photoH("p1", w1), "A02zoom-ph1", { rotate: -3 });
-  IMG(s, "photo-rings.jpg", 3.6, 2.2, w2, photoH("p2", w2), "A03zoom-ph2", { rotate: 3 });
+  IMG(s, "photo-hang.jpg", 0.6, 1.8, w1, photoH("p1", w1), "A02zoom-ph1");
+  IMG(s, "photo-rings.jpg", 3.85, 1.8, w2, photoH("p2", w2), "A03zoom-ph2");
   IMG(s, "tape.png", 1.5, 1.55, 1.2, 0.38, "A02fade-tp1", { rotate: -8 });
   IMG(s, "tape.png", 4.6, 2.0, 1.2, 0.38, "A03fade-tp2", { rotate: 6 });
   const steps = [

@@ -5,6 +5,8 @@ function mkR(seed) {
   let s = (seed >>> 0) || 1;
   return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; };
 }
+const S = { j: 1, w: 1, p: 1 };
+const setStyle = (o) => Object.assign(S, o);
 const f = (n) => n.toFixed(1);
 function smooth(pts) {
   if (pts.length < 3) return "M" + pts.map((p) => f(p[0]) + " " + f(p[1])).join(" L");
@@ -17,7 +19,7 @@ function smooth(pts) {
   return d + ` L${f(l[0])} ${f(l[1])}`;
 }
 function jl(R, x1, y1, x2, y2, amp = 2, ext = 0) {
-  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len;
+  amp *= S.j; const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len;
   x1 -= ux * ext; y1 -= uy * ext; x2 += ux * ext; y2 += uy * ext;
   const n = Math.max(2, Math.round(len / 35));
   const pts = [];
@@ -28,11 +30,11 @@ function jl(R, x1, y1, x2, y2, amp = 2, ext = 0) {
   return pts;
 }
 const path = (d, color, w, op = 1) =>
-  `<path d="${d}" fill="none" stroke="${color}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="${op}"/>`;
+  `<path d="${d}" fill="none" stroke="${color}" stroke-width="${f(w * S.w)}" stroke-linecap="round" stroke-linejoin="round" opacity="${op}"/>`;
 // pencil line (two passes)
 function line(R, x1, y1, x2, y2, color, w = 5, amp = 2, ext = 0) {
   return path(smooth(jl(R, x1, y1, x2, y2, amp, ext)), color, w) +
-    path(smooth(jl(R, x1, y1, x2, y2, amp * 1.2, ext)), color, Math.max(1.5, w * 0.35), 0.45);
+    (S.p ? path(smooth(jl(R, x1, y1, x2, y2, amp * 1.2, ext)), color, Math.max(1.5, w * 0.35), 0.45) : "");
 }
 function poly(R, pts, color, w = 5, closed = false, amp = 1.8, ext = 3) {
   let s = "";
@@ -44,17 +46,17 @@ function ellipse(R, cx, cy, rx, ry, color, w = 5, over = 1.1) {
   const pts = [], n = 22, a0 = R() * 6;
   for (let i = 0; i <= n * over; i++) {
     const a = a0 + (i / n) * Math.PI * 2;
-    const k = 1 + (R() - 0.5) * 0.06;
+    const k = 1 + (R() - 0.5) * 0.06 * S.j;
     pts.push([cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k]);
   }
-  return path(smooth(pts), color, w) + path(smooth(pts.map((p) => [p[0] + (R() - 0.5) * 3, p[1] + (R() - 0.5) * 3])), color, w * 0.35, 0.45);
+  return path(smooth(pts), color, w) + (S.p ? path(smooth(pts.map((p) => [p[0] + (R() - 0.5) * 3, p[1] + (R() - 0.5) * 3])), color, w * 0.35, 0.45) : "");
 }
 function fillPoly(R, pts, color, op = 1, amp = 3) {
-  const p = pts.map((q) => [q[0] + (R() - 0.5) * amp * 2, q[1] + (R() - 0.5) * amp * 2]);
+  amp *= S.j; const p = pts.map((q) => [q[0] + (R() - 0.5) * amp * 2, q[1] + (R() - 0.5) * amp * 2]);
   return `<path d="M${p.map((q) => f(q[0]) + " " + f(q[1])).join(" L")} Z" fill="${color}" stroke="${color}" stroke-width="4" stroke-linejoin="round" opacity="${op}"/>`;
 }
 function fillEllipse(R, cx, cy, rx, ry, color, op = 1) {
-  return `<ellipse cx="${f(cx + (R() - 0.5) * 3)}" cy="${f(cy + (R() - 0.5) * 3)}" rx="${f(rx)}" ry="${f(ry)}" fill="${color}" opacity="${op}"/>`;
+  return `<ellipse cx="${f(cx + (R() - 0.5) * 3 * S.j)}" cy="${f(cy + (R() - 0.5) * 3 * S.j)}" rx="${f(rx)}" ry="${f(ry)}" fill="${color}" opacity="${op}"/>`;
 }
 
 async function render(svgInner, w, h, file, scale = 2) {
@@ -62,7 +64,7 @@ async function render(svgInner, w, h, file, scale = 2) {
   await sharp(Buffer.from(svg)).png().toFile(file);
 }
 
-const INK = "#14213D", RED = "#E63946", BLUE = "#1D9BF0", YEL = "#FFC933", WHITE = "#FFFFFF";
+const INK = "#46557A", RED = "#EF8A90", BLUE = "#7DB6E4", YEL = "#F5CF6B", WHITE = "#FFFFFF";
 
 // ---------- shapes ----------
 function card(w, h, o = {}) {
@@ -88,7 +90,7 @@ function arrow(w, h, x0, y0, x1, y1, bend = 0, color = INK, sw = 5, seed = 3) {
   const hl = Math.min(26, len * 0.35), ang = 0.5;
   const rot = (vx, vy, a) => [vx * Math.cos(a) - vy * Math.sin(a), vx * Math.sin(a) + vy * Math.cos(a)];
   const [a1x, a1y] = rot(-ux, -uy, ang), [a2x, a2y] = rot(-ux, -uy, -ang);
-  return path(smooth(pts), color, sw) + path(smooth(pts.map((p) => [p[0] + 1.5, p[1] - 1.2])), color, sw * 0.35, 0.45) +
+  return path(smooth(pts), color, sw) + (S.p ? path(smooth(pts.map((p) => [p[0] + 1.5, p[1] - 1.2])), color, sw * 0.35, 0.45) : "") +
     line(R, x1, y1, x1 + a1x * hl, y1 + a1y * hl, color, sw, 1.2) + line(R, x1, y1, x1 + a2x * hl, y1 + a2y * hl, color, sw, 1.2);
 }
 function star(R, cx, cy, r, fill = YEL, stroke = INK, sw = 4) {
@@ -151,7 +153,7 @@ const POSES = {
     arms: [[[94, 72], [84, 48], [82, 26]], [[94, 72], [106, 48], [104, 26]]],
     legs: [[[92, 134], [132, 104], [112, 36]], [[92, 134], [138, 100], [120, 34]]],
   }, ink) + star(R, 118, 24, 11, YEL, INK, 3),
-  swing: (R, ink) => line(R, 160, 0, 142, 50, "#C9A66B", 8, 1) + person(R, {
+  swing: (R, ink) => line(R, 160, 0, 142, 50, "#D8BE92", 8, 1) + person(R, {
     head: [124, 78], neck: [118, 96], hip: [86, 152],
     arms: [[[118, 98], [132, 76], [141, 52]], [[118, 98], [138, 84], [146, 56]]],
     legs: [[[86, 152], [62, 184], [40, 214]], [[86, 152], [74, 190], [58, 226]]],
@@ -160,7 +162,7 @@ const POSES = {
     const w = [[40, 232], [150, 225], [170, 22]];
     const pts = []; for (let i = 0; i <= 16; i++) { const t = i / 16, a = (1 - t) * (1 - t), b = 2 * (1 - t) * t, c = t * t; pts.push([a * w[0][0] + b * w[1][0] + c * w[2][0], a * w[0][1] + b * w[1][1] + c * w[2][1]]); }
     const fillP = pts.concat([[195, 22], [195, 232]]);
-    return fillPoly(R, fillP, "#F6B8BE", 0.9, 1) + path(smooth(pts), RED, 7) + line(R, 170, 22, 195, 22, RED, 9, 1) +
+    return fillPoly(R, fillP, "#F9D5D8", 0.9, 1) + path(smooth(pts), RED, 7) + line(R, 170, 22, 195, 22, RED, 9, 1) +
       person(R, {
         head: [116, 80], neck: [112, 100], hip: [92, 152],
         arms: [[[112, 102], [140, 64], [164, 28]], [[112, 102], [90, 124], [74, 140]]],
@@ -168,8 +170,8 @@ const POSES = {
       }, ink);
   },
   rings: (R, ink) => bar(R, 30, 170, 14) +
-    line(R, 76, 14, 76, 46, "#C9A66B", 5, 1) + line(R, 124, 14, 124, 46, "#C9A66B", 5, 1) +
-    ellipse(R, 76, 62, 13, 17, "#C9A66B", 6) + ellipse(R, 124, 62, 13, 17, "#C9A66B", 6) +
+    line(R, 76, 14, 76, 46, "#D8BE92", 5, 1) + line(R, 124, 14, 124, 46, "#D8BE92", 5, 1) +
+    ellipse(R, 76, 62, 13, 17, "#D8BE92", 6) + ellipse(R, 124, 62, 13, 17, "#D8BE92", 6) +
     person(R, {
       head: [100, 100], neck: [100, 118], hip: [100, 172],
       arms: [[[100, 120], [84, 96], [76, 66]], [[100, 120], [116, 96], [124, 66]]],
@@ -189,16 +191,16 @@ async function figure(name, file, ink = INK, seed = 7) {
 // ---------- icons (200x200 canvas) ----------
 const ICONS = {
   tv: (R, ink) => {
-    let s = fillPoly(R, [[24, 54], [176, 54], [176, 160], [24, 160]], "#BFE3FF", 1, 2) + poly(R, [[24, 54], [176, 54], [176, 160], [24, 160]], ink, 6, true);
+    let s = fillPoly(R, [[24, 54], [176, 54], [176, 160], [24, 160]], "#D9EAF9", 1, 2) + poly(R, [[24, 54], [176, 54], [176, 160], [24, 160]], ink, 6, true);
     s += line(R, 100, 54, 66, 22, ink, 5) + line(R, 100, 54, 134, 22, ink, 5);
     s += fillPoly(R, [[84, 80], [84, 134], [128, 107]], RED, 1, 1) + poly(R, [[84, 80], [84, 134], [128, 107]], ink, 4, true, 1, 1);
     s += line(R, 50, 174, 150, 174, ink, 6);
     return s;
   },
   star: (R, ink) => star(R, 100, 104, 78, YEL, ink, 6) + fillPoly(R, [[40, 160], [160, 160], [160, 172], [40, 172]], BLUE, 0.9, 1),
-  globe: (R, ink) => fillEllipse(R, 100, 100, 74, 74, "#BFE3FF") + ellipse(R, 100, 100, 74, 74, ink, 6) +
+  globe: (R, ink) => fillEllipse(R, 100, 100, 74, 74, "#D9EAF9") + ellipse(R, 100, 100, 74, 74, ink, 6) +
     ellipse(R, 100, 100, 32, 74, ink, 4) + line(R, 26, 100, 174, 100, ink, 4) + line(R, 38, 64, 162, 64, ink, 3.5) + line(R, 38, 136, 162, 136, ink, 3.5) +
-    fillPoly(R, [[60, 70], [86, 66], [92, 90], [70, 98]], "#7BD389", 0.85, 2) + fillPoly(R, [[112, 108], [140, 104], [146, 134], [118, 138]], "#7BD389", 0.85, 2),
+    fillPoly(R, [[60, 70], [86, 66], [92, 90], [70, 98]], "#BFE8CB", 0.85, 2) + fillPoly(R, [[112, 108], [140, 104], [146, 134], [118, 138]], "#BFE8CB", 0.85, 2),
   medal: (R, ink) => fillPoly(R, [[62, 14], [100, 80], [78, 92], [40, 28]], RED, 1, 1) + fillPoly(R, [[138, 14], [100, 80], [122, 92], [160, 28]], BLUE, 1, 1) +
     poly(R, [[62, 14], [100, 80], [78, 92], [40, 28]], ink, 4, true) + poly(R, [[138, 14], [100, 80], [122, 92], [160, 28]], ink, 4, true) +
     fillEllipse(R, 100, 128, 56, 56, YEL) + ellipse(R, 100, 128, 56, 56, ink, 6) + star(R, 100, 128, 30, "#FFFFFF", ink, 4),
@@ -208,7 +210,7 @@ const ICONS = {
       bolt(R, 56, 84, YEL, ink).replace("<path", '<g transform="translate(72,70) scale(0.9)"><path') .replace(/$/, "</g>");
   },
   bulb: (R, ink) => fillEllipse(R, 100, 80, 46, 46, YEL) + ellipse(R, 100, 80, 46, 46, ink, 6) +
-    fillPoly(R, [[78, 118], [122, 118], [118, 150], [82, 150]], "#D0D6E2", 1, 1) + poly(R, [[78, 118], [122, 118], [118, 150], [82, 150]], ink, 5, true) +
+    fillPoly(R, [[78, 118], [122, 118], [118, 150], [82, 150]], "#E3E8F1", 1, 1) + poly(R, [[78, 118], [122, 118], [118, 150], [82, 150]], ink, 5, true) +
     line(R, 84, 164, 116, 164, ink, 6) + line(R, 90, 76, 100, 96, ink, 4) + line(R, 100, 96, 110, 76, ink, 4) +
     line(R, 100, 12, 100, 0, ink, 5) + line(R, 40, 28, 28, 16, ink, 5) + line(R, 160, 28, 172, 16, ink, 5) + line(R, 36, 80, 18, 80, ink, 5) + line(R, 164, 80, 182, 80, ink, 5),
   dumbbell: (R, ink) => line(R, 40, 100, 160, 100, ink, 10) +
@@ -219,9 +221,9 @@ const ICONS = {
   rope: (R, ink) => {
     let s = line(R, 40, 4, 100, 4, ink, 8) + line(R, 100, 4, 100, 12, ink, 5);
     const pts = []; for (let i = 0; i <= 16; i++) pts.push([100 + Math.sin(i / 2.2) * 9, 12 + i * 9.2]);
-    s += path(smooth(pts), "#C9A66B", 14) + path(smooth(pts), ink, 3, 0.5);
+    s += path(smooth(pts), "#D8BE92", 14) + path(smooth(pts), ink, 3, 0.5);
     for (let i = 1; i < 16; i += 2) s += line(R, 92, 12 + i * 9.2, 108, 22 + i * 9.2, ink, 2.5, 0.5);
-    s += fillEllipse(R, 100, 170, 18, 13, "#C9A66B") + ellipse(R, 100, 170, 18, 13, ink, 4);
+    s += fillEllipse(R, 100, 170, 18, 13, "#D8BE92") + ellipse(R, 100, 170, 18, 13, ink, 4);
     return s;
   },
   ladder: (R, ink) => {
@@ -230,8 +232,8 @@ const ICONS = {
     s += arrow(200, 200, 100, 170, 100, 128, 0, YEL, 7, 5);
     return s;
   },
-  buzzer: (R, ink) => fillPoly(R, [[50, 140], [150, 140], [160, 190], [40, 190]], "#9FB3D1", 1, 1) + poly(R, [[50, 140], [150, 140], [160, 190], [40, 190]], ink, 5, true) +
-    fillEllipse(R, 100, 120, 58, 32, "#9B1D28") + fillEllipse(R, 100, 100, 58, 40, RED) + ellipse(R, 100, 100, 58, 40, ink, 6) +
+  buzzer: (R, ink) => fillPoly(R, [[50, 140], [150, 140], [160, 190], [40, 190]], "#C7D3E8", 1, 1) + poly(R, [[50, 140], [150, 140], [160, 190], [40, 190]], ink, 5, true) +
+    fillEllipse(R, 100, 120, 58, 32, "#D9777E") + fillEllipse(R, 100, 100, 58, 40, RED) + ellipse(R, 100, 100, 58, 40, ink, 6) +
     line(R, 78, 84, 96, 78, WHITE, 6, 1) + line(R, 100, 6, 100, 34, YEL, 6) + line(R, 44, 18, 62, 40, YEL, 6) + line(R, 156, 18, 138, 40, YEL, 6),
   bubble: (R, ink) => fillPoly(R, [[10, 10], [190, 10], [190, 130], [60, 130], [30, 170], [38, 130], [10, 130]], "#FFFFFF", 1, 1) + poly(R, [[10, 10], [190, 10], [190, 130], [60, 130], [30, 170], [38, 130], [10, 130]], ink, 5, true),
 };
@@ -240,4 +242,4 @@ async function icon(name, file, ink = INK, seed = 11) {
   await render(ICONS[name](R, ink), 200, 200, file);
 }
 
-module.exports = { mkR, render, card, arrow, star, bolt, sparkle, highlight, speedLines, figure, icon, line, poly, ellipse, fillPoly, fillEllipse, INK, RED, BLUE, YEL, WHITE, path, smooth };
+module.exports = { setStyle, mkR, render, card, arrow, star, bolt, sparkle, highlight, speedLines, figure, icon, line, poly, ellipse, fillPoly, fillEllipse, INK, RED, BLUE, YEL, WHITE, path, smooth };
