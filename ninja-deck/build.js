@@ -66,6 +66,21 @@ const IMG0 = (slide, file, x, y, w, h, name, extra = {}) =>
   slide.addImage({ path: AS(file), x, y, w, h, objectName: name, altText: "", ...extra });
 const TXT = (slide, runs, o) =>
   slide.addText(runs, { fontFace: FONT, rtlMode: true, lang: "he-IL", align: "right", valign: "middle", margin: 0, isTextBox: true, color: C.text1, ...o });
+
+// sentence rows: [{t, icon, iw, fill}]
+function rows(s, items, o) {
+  items.forEach((it, i) => {
+    const y = o.y0 + i * (o.h + o.gap), N = String(o.n0 + i * 2).padStart(2, "0");
+    IMG(s, it.fill || "card-w.png", o.x, y, o.w, o.h, `A${N}flyR-row${i}`);
+    let tw = o.w - 0.6;
+    if (it.icon) {
+      const iw = o.is * (it.iw || 1);
+      IMG(s, it.icon, o.x + o.w - 0.25 - iw, y + (o.h - o.is) / 2, iw, o.is, `A${N}flyR-ic${i}`);
+      tw = o.w - 0.9 - o.is;
+    }
+    TXT(s, it.t, { x: o.x + 0.3, y: y + 0.05, w: tw, h: o.h - 0.1, fontSize: o.fs, objectName: `A${N}flyR-t${i}` });
+  });
+}
 const photoH = (key, w) => (w * dims[key].h) / dims[key].w;
 
 // =========== 1. כותרת ===========
@@ -86,43 +101,30 @@ pres.addSection({ title: "פתיחה" });
 pres.addSection({ title: "היסטוריה" });
 {
   const s = pres.addSlide({ masterName: "NINJA_LIGHT", sectionTitle: "היסטוריה" });
-  s.addText("מאיפה זה בא? קצת היסטוריה", { placeholder: "title", rtlMode: true, lang: "he-IL", objectName: "A01fade-title" });
-  const cards = [
-    { x: 9.2, icon: "icon-tv.png", head: "1997 · יפן", body: "תוכנית טלוויזיה עם מכשולים ענקיים", col: C.accent1 },
-    { x: 4.9, icon: "icon-star.png", head: "2009 · ארה״ב", body: "הגרסה האמריקאית\nוכולם התאהבו", col: C.accent2 },
-    { x: 0.6, icon: "icon-globe.png", head: "היום", body: "אולמות נינג'ה בכל העולם, גם בישראל", col: C.accent4 },
-  ];
-  cards.forEach((c, i) => {
-    const n = 2 + i * 3, N = String(n).padStart(2, "0");
-    IMG(s, "card-w.png", c.x, 1.75, 3.5, 4.8, `A${N}flyB-card${i}`);
-    IMG(s, c.icon, c.x + 0.9, 2.0, 1.7, 1.7, `A${N}flyB-icon${i}`);
-    TXT(s, c.head, { x: c.x + 0.2, y: 3.95, w: 3.1, h: 0.75, fontSize: 34, bold: true, color: c.col, align: "center", objectName: `A${N}flyB-head${i}` });
-    TXT(s, c.body, { x: c.x + 0.3, y: 4.8, w: 2.9, h: 1.5, fontSize: 24, align: "center", valign: "top", objectName: `A${N}flyB-body${i}` });
-    if (i < 2) IMG(s, "arr-left.png", c.x - 0.78, 3.7, 0.7, 0.6, `A${String(n + 1).padStart(2, "0")}wipeR-arr${i}`);
-  });
-  s.addNotes("הכול התחיל ביפן ב-1997 בתוכנית טלוויזיה שנקראת ״סאסקה״ (בעולם קוראים לה Ninja Warrior). אחר כך הגיעה הגרסה האמריקאית (2009), והספורט התפשט לכל העולם.");
+  s.addText("מאיפה זה בא?", { placeholder: "title", rtlMode: true, lang: "he-IL", objectName: "A01fade-title" });
+  rows(s, [
+    { t: "הספורט התחיל ביפן.", icon: "icon-tv.png" },
+    { t: "משם הוא עבר לארה״ב.", icon: "icon-star.png" },
+    { t: "אחר כך הוא הגיע לישראל.", icon: "icon-globe.png" },
+    { t: "והיום הוא אפילו ספורט אולימפי באולימפיאדה הבאה!", icon: "icon-medal.png", fill: "card-step-y.png" },
+  ], { x: 0.6, w: 12.1, y0: 1.65, h: 1.15, gap: 0.2, is: 0.9, fs: 30, n0: 2 });
+  s.addNotes("הכול התחיל ביפן ב-1997 בתוכנית טלוויזיה שנקראת ״סאסקה״ (Ninja Warrior). אחר כך הגיעה הגרסה האמריקאית (2009), והספורט התפשט לעוד מדינות, גם לישראל.");
 }
 
 // =========== 3. אולימפי ===========
 {
   const s = pres.addSlide({ masterName: "NINJA_LIGHT", sectionTitle: "היסטוריה" });
   s.addText("הספורט הזה הולך לאולימפיאדה!", { placeholder: "title", rtlMode: true, lang: "he-IL", objectName: "A01fade-title" });
-  IMG(s, "card-big.png", 7.6, 1.7, 5.1, 4.2, "A02zoom-big");
-  IMG(s, "icon-medal.png", 9.3, 1.85, 1.7, 1.7, "A03zoom-medal");
-  TXT(s, "לוס אנג'לס 2028", { x: 7.8, y: 3.6, w: 4.7, h: 0.75, fontSize: 38, bold: true, color: C.accent1, align: "center", objectName: "A03fade-la" });
-  TXT(s, "מסלול מכשולים\nבהשראת נינג'ה", { x: 8.0, y: 4.4, w: 4.3, h: 1.3, fontSize: 26, align: "center", valign: "top", objectName: "A03fade-la2" });
-  const rows = [
-    { icon: "icon-globe.png", t: "מחליף את הרכיבה על סוסים" },
-    { icon: "bolt.png", t: "מרוץ ראש בראש" },
-  ];
-  rows.forEach((r, i) => {
-    const y = 1.7 + i * 2.5, n = 4 + i;
-    IMG(s, "card-row.png", 0.6, y, 6.6, 1.7, `A0${n}flyL-row${i}`);
-    IMG(s, r.icon, 0.9, y + 0.4, r.icon === "bolt.png" ? 0.75 : 0.9, 0.9, `A0${n}flyL-ic${i}`);
-    TXT(s, r.t, { x: 2.0, y: y + 0.15, w: 5.0, h: 1.4, fontSize: 26, bold: true, objectName: `A0${n}flyL-t${i}` });
-  });
-  IMG(s, "hl-wide.png", 2.2, 6.15, 8.9, 0.95, "A07wipeR-hl");
-  TXT(s, "ילדים כמו שקד יכולים לחלום על האולימפיאדה!", { x: 2.2, y: 6.15, w: 8.9, h: 0.95, fontSize: 30, bold: true, align: "center", objectName: "A08fade-dream" });
+  IMG(s, "card-big.png", 8.9, 1.65, 3.8, 5.2, "A02zoom-big");
+  IMG(s, "icon-medal.png", 9.95, 1.95, 1.7, 1.7, "A03zoom-medal");
+  TXT(s, "לוס אנג'לס", { x: 9.0, y: 3.9, w: 3.6, h: 0.7, fontSize: 32, bold: true, align: "center", objectName: "A03fade-la" });
+  TXT(s, "2028", { x: 9.0, y: 4.6, w: 3.6, h: 1.2, fontSize: 66, bold: true, color: C.accent1, align: "center", objectName: "A03fade-yr" });
+  rows(s, [
+    { t: "ב-2028 תהיה אולימפיאדה בלוס אנג'לס." },
+    { t: "יהיה בה מסלול מכשולים בהשראת נינג'ה." },
+    { t: "המתחרים ירוצו מרוץ ראש בראש." },
+    { t: "ילדים כמו שקד יכולים לחלום על האולימפיאדה!", fill: "card-step-y.png" },
+  ], { x: 0.6, w: 8.0, y0: 1.65, h: 1.15, gap: 0.2, is: 0, fs: 26, n0: 4 });
   s.addNotes("חשוב לדעת: נינג'ה לא נהיה ענף אולימפי בפני עצמו, אלא מסלול מכשולים בהשראת נינג'ה ווריור ייכנס לחמשת הקרב המודרני באולימפיאדת לוס אנג'לס 2028 (במקום רכיבה על סוסים).\n\nמקורות: UIPM (איגוד חמשת הקרב המודרני), דיווחי NBC Sports ו-Hypebeast, 2026.");
 }
 
@@ -136,20 +138,11 @@ pres.addSection({ title: "שקד" });
   IMG(s, "photo-rings.jpg", 3.85, 1.8, w2, photoH("p2", w2), "A03zoom-ph2");
   IMG(s, "tape.png", 1.5, 1.55, 1.2, 0.38, "A02fade-tp1", { rotate: -8 });
   IMG(s, "tape.png", 4.6, 2.0, 1.2, 0.38, "A03fade-tp2", { rotate: 6 });
-  const steps = [
-    { h: "לפני שנה וחצי", b: "התחילה חוג במתנ״ס פרדס חנה", col: C.accent1, card: "card-step.png" },
-    { h: "מאז", b: "לומדת מכשולים חדשים", col: C.accent2, card: "card-step.png" },
-    { h: "היום", b: "משתפרת כל הזמן!", col: C.accent4, card: "card-step-y.png" },
-  ];
-  steps.forEach((st, i) => {
-    const y = 1.65 + i * 1.85, n = 4 + i * 2;
-    IMG(s, st.card, 7.2, y, 5.5, 1.5, `A0${n}flyR-card${i}`);
-    TXT(s, [
-      { text: st.h, options: { bold: true, fontSize: 30, color: st.col, breakLine: true } },
-      { text: st.b, options: { fontSize: 26 } },
-    ], { x: 7.45, y: y + 0.12, w: 5.0, h: 1.26, objectName: `A0${n}flyR-text${i}` });
-    if (i < 2) IMG(s, "arr-down.png", 9.7, y + 1.5, 0.5, 0.35, `A0${n + 1}wipeD-ar${i}`);
-  });
+  rows(s, [
+    { t: "לפני שנה וחצי שקד התחילה חוג נינג'ה במתנ״ס פרדס חנה." },
+    { t: "היא מתאמנת ולומדת מכשולים חדשים." },
+    { t: "והיא משתפרת כל הזמן!", fill: "card-step-y.png" },
+  ], { x: 7.2, w: 5.5, y0: 1.65, h: 1.55, gap: 0.25, is: 0, fs: 24, n0: 4 });
   s.addNotes("לפני שנה וחצי שקד התחילה חוג נינג'ה במתנ״ס פרדס חנה. מאז היא משתפרת כל הזמן. בתמונות אפשר לראות אותה תלויה על המוטות ותופסת טבעות.");
 }
 
@@ -168,28 +161,12 @@ pres.addSection({ title: "שקד" });
 {
   const s = pres.addSlide({ masterName: "NINJA_LIGHT", sectionTitle: "שקד" });
   s.addText("נופלים? קמים ומנסים שוב!", { placeholder: "title", rtlMode: true, lang: "he-IL", objectName: "A01fade-title" });
-  const chips = [
-    { t: "מנסים", c: "chip-blue.png", x: 10.1 }, { t: "נופלים", c: "chip-red.png", x: 6.95 },
-    { t: "קמים", c: "chip-grn.png", x: 3.8 }, { t: "מנסים שוב!", c: "chip-yel.png", x: 0.65 },
-  ];
-  chips.forEach((c, i) => {
-    const n = 2 + i * 2;
-    IMG(s, c.c, c.x, 1.6, 2.6, 1.1, `A0${n}zoom-chip${i}`);
-    TXT(s, c.t, { x: c.x + 0.1, y: 1.7, w: 2.4, h: 0.9, fontSize: 28, bold: true, align: "center", objectName: `A0${n}zoom-chipt${i}` });
-    if (i < 3) IMG(s, "arr-left.png", c.x - 0.58, 1.85, 0.55, 0.5, `A0${n + 1}wipeR-ar${i}`);
-  });
-  const sk = [
-    { t: "אומץ", d: "מעזים גם כשמפחיד", i: "icon-heart.png", x: 8.8, col: C.accent1 },
-    { t: "תכנון", d: "חושבים על הצעד הבא", i: "icon-bulb.png", x: 4.7, col: C.accent2 },
-    { t: "כוח", d: "ידיים ובטן חזקות", i: "icon-dumbbell.png", x: 0.6, col: C.accent4 },
-  ];
-  sk.forEach((k, i) => {
-    const n = 10 + i * 2;
-    IMG(s, "card-skill.png", k.x, 3.3, 3.9, 3.6, `A${n}flyB-card${i}`);
-    IMG(s, k.i, k.x + 1.2, 3.45, 1.5, 1.5, `A${n}flyB-ic${i}`);
-    TXT(s, k.t, { x: k.x + 0.2, y: 4.95, w: 3.5, h: 0.65, fontSize: 32, bold: true, color: k.col, align: "center", objectName: `A${n}flyB-t${i}` });
-    TXT(s, k.d, { x: k.x + 0.3, y: 5.65, w: 3.3, h: 1.05, fontSize: 24, align: "center", valign: "top", objectName: `A${n}flyB-d${i}` });
-  });
+  rows(s, [
+    { t: "לפעמים נופלים, אבל קמים ומנסים שוב!", icon: "fig-hero.png", iw: 0.83, fill: "card-step-y.png" },
+    { t: "צריך אומץ כדי לנסות מכשול חדש.", icon: "icon-heart.png" },
+    { t: "צריך תכנון כדי לדעת מה הצעד הבא.", icon: "icon-bulb.png" },
+    { t: "צריך כוח בידיים ובבטן.", icon: "icon-dumbbell.png" },
+  ], { x: 0.6, w: 12.1, y0: 1.65, h: 1.15, gap: 0.2, is: 0.9, fs: 30, n0: 2 });
   s.addNotes("בנינג'ה לפעמים נופלים - וזה בסדר גמור! העיקר לקום ולנסות שוב. כדי להצליח צריך אומץ, תכנון וכוח.");
 }
 
