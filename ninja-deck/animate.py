@@ -89,6 +89,40 @@ def timing_for(slide_xml):
     return xml
 
 
+AUTOPLAY_SLIDES = {6}
+
+
+def autoplay_timing(slide_xml):
+    root = etree.fromstring(slide_xml)
+    vids = []
+    for pic in root.iter(P + "pic"):
+        if pic.find(".//{%s}videoFile" % NS["a"]) is not None:
+            vids.append(pic.find(".//" + P + "cNvPr").get("id"))
+    if not vids:
+        return None
+    ids = Ids()
+    cmds = ""
+    for k, spid in enumerate(vids):
+        node = "afterEffect" if k == 0 else "withEffect"
+        cmds += (f'<p:par><p:cTn id="{ids.next()}" presetID="1" presetClass="mediacall" presetSubtype="0" fill="hold" nodeType="{node}">'
+                 f'<p:stCondLst><p:cond delay="0"/></p:stCondLst><p:childTnLst><p:cmd type="call" cmd="playFrom(0.0)"><p:cBhvr>'
+                 f'<p:cTn id="{ids.next()}" dur="1" fill="hold"/><p:tgtEl><p:spTgt spid="{spid}"/></p:tgtEl></p:cBhvr></p:cmd></p:childTnLst></p:cTn></p:par>')
+    media = ""
+    for spid in vids:
+        media += (f'<p:video><p:cMediaNode vol="0" showWhenStopped="1"><p:cTn id="{ids.next()}" fill="hold" display="0"><p:stCondLst><p:cond delay="indefinite"/></p:stCondLst>'
+                  f'<p:endCondLst><p:cond evt="onStopAudio" delay="0"><p:tgtEl><p:sldTgt/></p:tgtEl></p:cond></p:endCondLst></p:cTn>'
+                  f'<p:tgtEl><p:spTgt spid="{spid}"/></p:tgtEl></p:cMediaNode></p:video>')
+    oid, iid = ids.next(), ids.next()
+    return (f'<p:timing xmlns:p="{NS["p"]}"><p:tnLst><p:par><p:cTn id="1" dur="indefinite" restart="never" nodeType="tmRoot"><p:childTnLst>'
+            f'<p:seq concurrent="1" nextAc="seek"><p:cTn id="2" dur="indefinite" nodeType="mainSeq"><p:childTnLst>'
+            f'<p:par><p:cTn id="{oid}" fill="hold"><p:stCondLst><p:cond delay="indefinite"/><p:cond evt="onBegin" delay="0"><p:tn val="2"/></p:cond></p:stCondLst><p:childTnLst>'
+            f'<p:par><p:cTn id="{iid}" fill="hold"><p:stCondLst><p:cond delay="0"/></p:stCondLst><p:childTnLst>{cmds}</p:childTnLst></p:cTn></p:par>'
+            f'</p:childTnLst></p:cTn></p:par></p:childTnLst></p:cTn>'
+            f'<p:prevCondLst><p:cond evt="onPrev" delay="0"><p:tgtEl><p:sldTgt/></p:tgtEl></p:cond></p:prevCondLst>'
+            f'<p:nextCondLst><p:cond evt="onNext" delay="0"><p:tgtEl><p:sldTgt/></p:tgtEl></p:cond></p:nextCondLst></p:seq>'
+            f'{media}</p:childTnLst></p:cTn></p:par></p:tnLst></p:timing>')
+
+
 def main(src, dst):
     zin = zipfile.ZipFile(src)
     zout = zipfile.ZipFile(dst, "w", zipfile.ZIP_DEFLATED)
@@ -96,7 +130,8 @@ def main(src, dst):
         if item.filename.endswith("/"): continue
         data = zin.read(item.filename)
         if re.match(r"ppt/slides/slide\d+\.xml$", item.filename):
-            t = timing_for(data)
+            num = int(re.search(r"slide(\d+)\.xml", item.filename).group(1))
+            t = autoplay_timing(data) if num in AUTOPLAY_SLIDES else timing_for(data)
             if t:
                 s = data.decode("utf8")
                 # insert after clrMapOvr (and transition if any), before extLst

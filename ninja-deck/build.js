@@ -157,6 +157,17 @@ pres.addSection({ title: "שקד" });
   s.addNotes("שני סרטונים של שקד על מסלול הטבעות והמוטות. לחצו על הסרטון כדי להפעיל. שימו לב לאחיזה, לתכנון ולהתמדה!");
 }
 
+// =========== 5ב. סרטוני אוטופליי (5 שניות, בלי סאונד, מתחילים מעצמם) ===========
+{
+  const s = pres.addSlide({ masterName: "NINJA_LIGHT", sectionTitle: "שקד" });
+  s.addText("עוד רגע מהאימון", { placeholder: "title", rtlMode: true, lang: "he-IL" });
+  const vw = 3.09, vh = 5.5;
+  [3.38, 6.86].forEach((x, i) => {
+    s.addMedia({ type: "video", path: AS(`video${5 + i}_clip.mp4`), cover: "data:image/jpeg;base64," + fs.readFileSync(AS(`poster${5 + i}_clip.jpg`)).toString("base64"), x, y: 1.55, w: vw, h: vh });
+  });
+  s.addNotes("שני קטעים קצרים (5 שניות, בלי קול) שמתחילים לרוץ מעצמם כשעוברים לשקף.");
+}
+
 // =========== 6. נופלים וקמים ===========
 {
   const s = pres.addSlide({ masterName: "NINJA_LIGHT", sectionTitle: "שקד" });
