@@ -47,8 +47,6 @@ const quotes = [
   { t: 'לא כואב כשמקבלים מכה, רק כשפוגעים בלב…', size: 'm' },
   { t: 'תמיד עושה תחרות הורדות ידיים… עד היום.', size: 'm' },
   { t: '״אני סבתא מצחיקה…״', size: 's', side: 'R' },
-  { t: 'כשתרצי לקנות משהו לעצמך, אבל רק לעצמך, תבואי אליי, אני אתן לך כסף.', size: 'l' },
-  { t: 'את לא יכולה לדבר אליהם ככה.', size: 'm' },
   { t: 'לשנוא זה רגש נוראי…', size: 'm', c: 'L' },
   { t: 'אני לא שונאת. מה זו המילה הזו בכלל, שונאת?', size: 'm' },
   { t: 'אין חיים טובים, יש רגעים טובים.', size: 's', side: 'L' },
@@ -59,7 +57,7 @@ const quotes = [
 const FORMATS = [
   { id: 'wide', compact: false, html: 'index.html', png: 'poster.png', pdf: 'poster.pdf', vw: 2400, vh: 1400, sidePh: 2 },
   // 35×50 ס"מ = 1322.83×1889.76 פיקסלי CSS (96dpi); רינדור ב-300dpi => scale 3.125
-  { id: 'a35x50', compact: true, html: 'index-35x50.html', png: 'poster-35x50.png', pdf: 'poster-35x50.pdf', vw: 1323, vh: 1890, sidePh: Number(process.env.SIDE_PH || 12) },
+  { id: 'a35x50', compact: true, html: 'index-35x50.html', png: 'poster-35x50.png', pdf: 'poster-35x50.pdf', vw: 1323, vh: 1890, sidePh: { L: Number(process.env.SIDE_PH_L || 8), R: Number(process.env.SIDE_PH_R || 13) } },
 ];
 
 let photoPool = files.map(f => ({ src: 'photos/' + encodeURI(f), ...jpegSize(path.join(photosDir, f)) }));
@@ -81,21 +79,25 @@ const br = s => s.replace(/\n/g, '<br>');
 
 function compose(cfg) {
   const sideOf = q => q.side || (cfg.compact ? q.c : null);
+  const feature = cfg.compact ? photoPool.find(p => p.src && p.src.includes('family-tree')) : null;
+  const pool = feature ? photoPool.filter(p => p !== feature) : photoPool;
+  const phCount = sd => (typeof cfg.sidePh === 'number' ? cfg.sidePh : cfg.sidePh[sd]);
   const sideQuotes = { L: quotes.filter(q => sideOf(q) === 'L'), R: quotes.filter(q => sideOf(q) === 'R') };
   const restQuotes = quotes.filter(q => !sideOf(q));
 
   // תמונות לרוחב לעמודות הצד, קרובות ליחס 1.4
-  const landscape = photoPool.map((p, i) => ({ p, i, d: Math.abs(p.w / p.h - 1.4) }))
+  const landscape = pool.map((p, i) => ({ p, i, d: Math.abs(p.w / p.h - 1.4) }))
     .filter(o => o.p.w / o.p.h > 1.15).sort((a, b) => a.d - b.d);
   const sidePick = { L: [], R: [] };
   for (const o of landscape) {
-    const s = sidePick.L.length <= sidePick.R.length ? 'L' : 'R';
-    if (sidePick[s].length < cfg.sidePh) sidePick[s].push(o.i);
-    if (sidePick.L.length === cfg.sidePh && sidePick.R.length === cfg.sidePh) break;
+    const need = { L: phCount('L') - sidePick.L.length, R: phCount('R') - sidePick.R.length };
+    if (need.L <= 0 && need.R <= 0) break;
+    let sd = need.L >= need.R ? 'L' : 'R'; if (need[sd] <= 0) sd = sd === 'L' ? 'R' : 'L';
+    sidePick[sd].push(o.i);
   }
   const used = new Set([...sidePick.L, ...sidePick.R]);
-  const sidePhotos = { L: sidePick.L.map(i => photoPool[i]), R: sidePick.R.map(i => photoPool[i]) };
-  const restPhotos = photoPool.filter((_, i) => !used.has(i));
+  const sidePhotos = { L: sidePick.L.map(i => pool[i]), R: sidePick.R.map(i => pool[i]) };
+  const restPhotos = pool.filter((_, i) => !used.has(i));
 
   const sideMix = s => (cfg.compact
     ? mix(sidePhotos[s], sideQuotes[s])
@@ -104,7 +106,7 @@ function compose(cfg) {
 
   const all = mix(restPhotos, restQuotes);
   const half = Math.ceil(all.length / 2);
-  return { top: all.slice(0, half), bottom: all.slice(half), L: sideMix('L'), R: sideMix('R') };
+  return { top: all.slice(0, half), bottom: all.slice(half), L: sideMix('L'), R: sideMix('R'), feature };
 }
 
 const render = list => list.map(it => {
@@ -117,7 +119,7 @@ const render = list => list.map(it => {
 }).join('\n');
 
 // עיצוב לפורמט 35×50: קנבס קבוע בפיקסלים, 8 עמודות
-const HERO_AR = process.env.HERO_AR || '0.64';
+const HERO_AR = process.env.HERO_AR || '0.68';
 const compactCss = `
 .poster.c{width:35cm;height:50cm;overflow:hidden;padding:34px 42px 26px;display:flex;flex-direction:column;--gap:9px}
 .poster.c::before{inset:14px}.poster.c::after{inset:23px}
@@ -130,8 +132,10 @@ const compactCss = `
 .c .band{column-count:8;column-gap:var(--gap)}
 .c .band > *{margin-bottom:var(--gap)}
 .c .mid{grid-template-columns:repeat(8,1fr);column-gap:var(--gap);margin:0}
-.c .side{display:block;column-count:2;column-gap:var(--gap);align-self:start}
-.c .side > *{break-inside:avoid;margin-bottom:var(--gap)}
+.c .side{display:flex;flex-direction:column;gap:var(--gap);align-self:start}
+.c .sp{column-count:2;column-gap:var(--gap)}
+.c .sp > *{break-inside:avoid;margin-bottom:var(--gap)}
+.c .feat .photo{padding:3px}.c .feat .photo .mat{padding:6px}
 .c .side.l{grid-column:1 / 3}.c .side.r{grid-column:7 / 9}
 .c .hero{grid-column:3 / 7;box-shadow:0 0 50px rgba(201,161,92,.38),0 14px 40px -10px rgba(0,0,0,.8)}
 .c .hero::before{inset:-9px}
@@ -143,9 +147,9 @@ const compactCss = `
 .c .qin{padding:16px 12px 9px}
 .c .qin::before{inset:4px}
 .c .mark{font-size:62px}
-.c .sz-s p{font-size:27px;line-height:1.12}
-.c .sz-m p{font-size:19px;line-height:1.3}
-.c .sz-l p{font-size:17px;line-height:1.3}
+.c .sz-s p{font-size:29px;line-height:1.12}
+.c .sz-m p{font-size:20.5px;line-height:1.3}
+.c .sz-l p{font-size:18.5px;line-height:1.3}
 .c footer{flex:none;padding:4px 0 0}
 .c footer .big{font-size:34px;margin-top:0;line-height:1.05}
 .c footer .small{display:none}
@@ -281,16 +285,17 @@ ${render(parts.top)}
     </section>
 
     <section class="mid">
-      <div class="side l" data-cols="${cfg.compact ? 2 : 1}">
-${render(parts.L)}
+      <div class="side l"${cfg.compact ? '' : ' data-cols="1"'}>
+${parts.feature ? '<div class="feat">' + render([{ type: 'p', ...parts.feature }]) + '</div>' : ''}
+${cfg.compact ? '<div class="sp" data-cols="2">' + render(parts.L) + '</div>' : render(parts.L)}
       </div>
       <div class="hero"><div class="spacer"></div><div class="hero-in">
         <img src="assets/hero.jpg" alt="רחל חנן">
         <div class="light"></div>
         <div class="hq">${br(heroQuote)}</div>
       </div></div>
-      <div class="side r" data-cols="${cfg.compact ? 2 : 1}">
-${render(parts.R)}
+      <div class="side r"${cfg.compact ? '' : ' data-cols="1"'}>
+${cfg.compact ? '<div class="sp" data-cols="2">' + render(parts.R) + '</div>' : render(parts.R)}
       </div>
     </section>
 
@@ -346,7 +351,7 @@ ${render(parts.bottom)}
       const avail = H - gap * (s.n - 1) - s.Q;
       if (s.P > 0) {
         const r = avail / s.P;
-        if (r < 0.72) total += 60 + (0.72 - r) * 600; else if (r > 1.4) total += 20 + (r - 1.4) * 200; else total += Math.pow(Math.log(r), 2) * 12;
+        if (r < 0.72) total += 60 + (0.72 - r) * 600; else if (r > 1.3) total += 100 + (r - 1.3) * 800; else total += Math.pow(Math.log(r), 2) * 12;
       } else {
         const sc = (H - gap * (s.n - 1)) / s.Q;
         if (sc < 0.98) total += 80; else total += Math.pow(Math.log(sc), 2) * 5;
@@ -396,7 +401,8 @@ ${render(parts.bottom)}
   }
 
   const top = document.querySelector('.band.top'), bottom = document.querySelector('.band.bottom');
-  const L = document.querySelector('.side.l'), Rr = document.querySelector('.side.r');
+  const L = document.querySelector('.side.l .sp') || document.querySelector('.side.l'), Rr = document.querySelector('.side.r .sp') || document.querySelector('.side.r');
+  const feat = document.querySelector('.side.l .feat'); const featH = feat ? feat.getBoundingClientRect().height : 0;
   const mid = document.querySelector('.mid'), hero = document.querySelector('.hero'), main = document.querySelector('main');
   const heroNat = hero.querySelector('.spacer').getBoundingClientRect().height;
 
@@ -407,7 +413,8 @@ ${render(parts.bottom)}
 
   let Hm;
   if (compact) Hm = heroNat; else Hm = Math.max(heroNat, (natSide(iL) + gap * (iL.length - 1) + natSide(iR) + gap * (iR.length - 1)) / 2);
-  const rL = optimize(iL, +L.dataset.cols, Hm), rR = optimize(iR, +Rr.dataset.cols, Hm);
+  const HmL = featH ? Hm - featH - gap : Hm;
+  const rL = optimize(iL, +L.dataset.cols, HmL), rR = optimize(iR, +Rr.dataset.cols, Hm);
   const rT0 = optimize(iT, +top.dataset.cols), rB0 = optimize(iB, +bottom.dataset.cols);
   let Ha = rT0.Hpref, Hb = rB0.Hpref;
   if (compact) {
@@ -417,7 +424,7 @@ ${render(parts.bottom)}
   }
   const rT = optimize(iT, +top.dataset.cols, Ha), rB = optimize(iB, +bottom.dataset.cols, Hb);
   report.top = apply(top, rT, iT, Ha); report.bottom = apply(bottom, rB, iB, Hb);
-  report.L = apply(L, rL, iL, Hm); report.R = apply(Rr, rR, iR, Hm);
+  report.L = apply(L, rL, iL, HmL); report.R = apply(Rr, rR, iR, Hm);
   hero.style.height = Hm + 'px'; mid.style.margin = '0'; mid.style.height = Hm + 'px';
   report.H = { Ha: Math.round(Ha), Hm: Math.round(Hm), Hb: Math.round(Hb) };
   document.documentElement.classList.add('packed');
