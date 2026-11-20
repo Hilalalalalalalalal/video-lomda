@@ -46,7 +46,6 @@ async function photos() {
 
 // ----- video posters -----
 function posters() {
-  execSync(`ffmpeg -v error -y -ss 30 -i ${out("video1.mp4")} -frames:v 1 ${out("poster1.jpg")}`);
   execSync(`ffmpeg -v error -y -ss 10 -i ${out("video2.mp4")} -frames:v 1 ${out("poster2.jpg")}`);
 }
 

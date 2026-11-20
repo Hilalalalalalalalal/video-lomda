@@ -151,10 +151,8 @@ pres.addSection({ title: "שקד" });
   const s = pres.addSlide({ masterName: "NINJA_LIGHT", sectionTitle: "שקד" });
   s.addText("שקד בפעולה", { placeholder: "title", rtlMode: true, lang: "he-IL", objectName: "A01fade-title" });
   const vw = 3.09, vh = 5.5;
-  [3.38, 6.86].forEach((x, i) => {
-    s.addMedia({ type: "video", path: AS(`video${i + 1}.mp4`), cover: "data:image/jpeg;base64," + fs.readFileSync(AS(`poster${i + 1}.jpg`)).toString("base64"), x, y: 1.55, w: vw, h: vh });
-  });
-  s.addNotes("שני סרטונים של שקד על מסלול הטבעות והמוטות. לחצו על הסרטון כדי להפעיל. שימו לב לאחיזה, לתכנון ולהתמדה!");
+  s.addMedia({ type: "video", path: AS("video2.mp4"), cover: "data:image/jpeg;base64," + fs.readFileSync(AS("poster2.jpg")).toString("base64"), x: (13.333 - vw) / 2, y: 1.55, w: vw, h: vh });
+  s.addNotes("סרטון של שקד על מסלול הטבעות והמוטות. לחצו על הסרטון כדי להפעיל. שימו לב לאחיזה, לתכנון ולהתמדה!");
 }
 
 // =========== 5ב. סרטוני אוטופליי (5 שניות, בלי סאונד, מתחילים מעצמם) ===========
