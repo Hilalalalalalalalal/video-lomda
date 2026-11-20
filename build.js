@@ -52,13 +52,15 @@ const quotes = [
   { t: 'אין חיים טובים, יש רגעים טובים.', size: 's', side: 'L' },
   { t: 'אם את מתחתנת עם מישהו בשביל לשנות אותו, אל תתחתני.', size: 'm' },
   { t: 'למדתי מאבא: לפעמים חיבוק הוא יותר ממילה טובה.', size: 'm' },
+  { t: 'אתה החבר הכי טוב שלי.', size: 'm' },
+  { t: 'איזו חזקה אני, נכון?', size: 's' },
 ];
 
 // ───── הגדרות הפורמטים ─────
 const FORMATS = [
   { id: 'wide', compact: false, html: 'index.html', png: 'poster.png', pdf: 'poster.pdf', vw: 2400, vh: 1400, sidePh: 2 },
   // 35×50 ס"מ = 1322.83×1889.76 פיקסלי CSS (96dpi); רינדור ב-300dpi => scale 3.125
-  { id: 'a35x50', compact: true, html: 'index-35x50.html', png: 'poster-35x50.png', pdf: 'poster-35x50.pdf', vw: 1323, vh: 1890, sidePh: { L: Number(process.env.SIDE_PH_L || 7), R: Number(process.env.SIDE_PH_R || 12) } },
+  { id: 'a35x50', compact: true, html: 'index-35x50.html', png: 'poster-35x50.png', pdf: 'poster-35x50.pdf', vw: 1323, vh: 1890, sidePh: { L: Number(process.env.SIDE_PH_L || 5), R: Number(process.env.SIDE_PH_R || 10) } },
 ];
 
 let photoPool = files.map(f => ({ src: 'photos/' + encodeURI(f), ...jpegSize(path.join(photosDir, f)) }));
@@ -120,9 +122,10 @@ const render = list => list.map(it => {
 }).join('\n');
 
 // עיצוב לפורמט 35×50: קנבס קבוע בפיקסלים, 8 עמודות
-const HERO_AR = process.env.HERO_AR || '0.72';
+const HERO_AR = process.env.HERO_AR || '0.82';
+const COLS = Number(process.env.COLS || 8), SC = Number(process.env.SIDE_COLS || 2);
 const compactCss = `
-.poster.c{width:35cm;height:50cm;overflow:hidden;padding:34px 42px 26px;display:flex;flex-direction:column;--gap:9px}
+.poster.c{width:35cm;height:50cm;overflow:hidden;padding:32px 42px 24px;display:flex;flex-direction:column;--gap:8px}
 .poster.c::before{inset:14px}.poster.c::after{inset:23px}
 .c header{padding:2px 0 8px;flex:none}
 .c .orn{gap:14px}.c .orn i{width:150px}.c .orn b{font-size:15px}
@@ -130,15 +133,15 @@ const compactCss = `
 .c .years{font-size:29px;margin-top:4px;letter-spacing:.32em}
 .c header .orn.bottom{margin-top:6px}
 .c main{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-height:0}
-.c .band{column-count:8;column-gap:var(--gap)}
+.c .band{column-count:${COLS};column-gap:var(--gap)}
 .c .band > *{margin-bottom:var(--gap)}
-.c .mid{grid-template-columns:repeat(8,1fr);column-gap:var(--gap);margin:0}
+.c .mid{grid-template-columns:repeat(${COLS},1fr);column-gap:var(--gap);margin:0}
 .c .side{display:flex;flex-direction:column;gap:var(--gap);align-self:start}
-.c .sp{column-count:2;column-gap:var(--gap)}
+.c .sp{column-count:${SC};column-gap:var(--gap)}
 .c .sp > *{break-inside:avoid;margin-bottom:var(--gap)}
 .c .feat .photo{padding:3px}.c .feat .photo .mat{padding:6px}
-.c .side.l{grid-column:1 / 3}.c .side.r{grid-column:7 / 9}
-.c .hero{grid-column:3 / 7;box-shadow:0 0 50px rgba(201,161,92,.38),0 14px 40px -10px rgba(0,0,0,.8)}
+.c .side.l{grid-column:1 / ${SC + 1}}.c .side.r{grid-column:${COLS - SC + 1} / ${COLS + 1}}
+.c .hero{grid-column:${SC + 1} / ${COLS - SC + 1};box-shadow:0 0 50px rgba(201,161,92,.38),0 14px 40px -10px rgba(0,0,0,.8)}
 .c .hero::before{inset:-9px}
 .c .hero .spacer{aspect-ratio:${HERO_AR}}
 .c .hero-in{inset:5px}
@@ -148,9 +151,9 @@ const compactCss = `
 .c .qin{padding:16px 12px 9px}
 .c .qin::before{inset:4px}
 .c .mark{font-size:62px}
-.c .sz-s p{font-size:29px;line-height:1.12}
-.c .sz-m p{font-size:20.5px;line-height:1.3}
-.c .sz-l p{font-size:18.5px;line-height:1.3}
+.c .sz-s p{font-size:27px;line-height:1.1}
+.c .sz-m p{font-size:19px;line-height:1.28}
+.c .sz-l p{font-size:17.5px;line-height:1.28}
 .c footer{flex:none;padding:4px 0 0}
 .c footer .big{font-size:34px;margin-top:0;line-height:1.05}
 .c footer .small{display:none}
@@ -221,7 +224,7 @@ header .orn.bottom{margin-top:clamp(18px,2.2vw,50px)}
 .hero::before{content:"";position:absolute;inset:calc(clamp(5px,.55vw,13px) * -2.4);border:1px solid rgba(201,161,92,.55);pointer-events:none}
 .hero .spacer{aspect-ratio:2153/3214;width:100%}
 .hero-in{position:absolute;inset:clamp(5px,.55vw,13px);overflow:hidden;background:var(--panel)}
-.hero-in img{display:block;width:100%;height:100%;object-fit:cover;object-position:88% 10%}
+.hero-in img{display:block;width:100%;height:100%;object-fit:cover;object-position:88% 30%}
 .hero-in .light{position:absolute;inset:0;mix-blend-mode:screen;pointer-events:none;
   background:radial-gradient(ellipse 60% 45% at 50% 62%, rgba(201,161,92,.20), transparent 70%)}
 .hero-in .hq{position:absolute;left:5%;top:23%;width:42%;font-family:var(--hand);font-size:clamp(28px,3.4vw,84px);line-height:1.22;
@@ -281,14 +284,14 @@ ${cfg.compact ? compactCss : ''}
   </header>
 
   <main>
-    <section class="band top" data-cols="${cfg.compact ? 8 : 4}">
+    <section class="band top" data-cols="${cfg.compact ? COLS : 4}">
 ${render(parts.top)}
     </section>
 
     <section class="mid">
       <div class="side l"${cfg.compact ? '' : ' data-cols="1"'}>
 ${parts.feature ? '<div class="feat">' + render([{ type: 'p', ...parts.feature }]) + '</div>' : ''}
-${cfg.compact ? '<div class="sp" data-cols="2">' + render(parts.L) + '</div>' : render(parts.L)}
+${cfg.compact ? '<div class="sp" data-cols="' + SC + '">' + render(parts.L) + '</div>' : render(parts.L)}
       </div>
       <div class="hero"><div class="spacer"></div><div class="hero-in">
         <img src="assets/hero.jpg" alt="רחל חנן">
@@ -296,11 +299,11 @@ ${cfg.compact ? '<div class="sp" data-cols="2">' + render(parts.L) + '</div>' : 
         <div class="hq">${br(heroQuote)}</div>
       </div></div>
       <div class="side r"${cfg.compact ? '' : ' data-cols="1"'}>
-${cfg.compact ? '<div class="sp" data-cols="2">' + render(parts.R) + '</div>' : render(parts.R)}
+${cfg.compact ? '<div class="sp" data-cols="' + SC + '">' + render(parts.R) + '</div>' : render(parts.R)}
       </div>
     </section>
 
-    <section class="band bottom" data-cols="${cfg.compact ? 8 : 4}">
+    <section class="band bottom" data-cols="${cfg.compact ? COLS : 4}">
 ${render(parts.bottom)}
     </section>
   </main>
