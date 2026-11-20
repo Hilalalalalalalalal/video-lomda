@@ -181,7 +181,7 @@ header .orn.bottom{margin-top:clamp(18px,2.2vw,50px)}
 /* ───── תמונות במסגרות זהב ───── */
 .photo{background:var(--foil);padding:clamp(3px,.3vw,7px);box-shadow:0 18px 40px -14px rgba(0,0,0,.85),0 0 24px rgba(201,161,92,.08)}
 .photo .mat{background:var(--panel);padding:clamp(6px,.8vw,18px)}
-.photo img{display:block;width:100%;height:auto;filter:saturate(.96) contrast(1.02)}
+.photo img{display:block;width:100%;height:auto}
 .photo.ph .mat{display:flex;align-items:center;justify-content:center;color:var(--gold);font-family:var(--hand);font-size:2em}
 
 /* ───── ציטוטים ───── */
@@ -271,6 +271,14 @@ console.log(`index.html נוצר: ${photoPool.length} תמונות, ${quotes.len
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(600);
   await page.screenshot({ path: path.join(ROOT, 'poster.png'), fullPage: true });
-  await browser.close();
   console.log('poster.png נוצר');
+
+  // PDF להדפסה: טקסט וקטורי, תמונות ברזולוציה המקורית, עמוד אחד באורך הפוסטר
+  const pdfPage = await browser.newPage({ viewport: { width: 2400, height: 1400 } });
+  await pdfPage.goto(url);
+  await pdfPage.evaluate(() => document.fonts.ready);
+  await pdfPage.addStyleTag({ content: '@page{margin:0;size:2400px ' + cssH + 'px} html,body{margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}' });
+  await pdfPage.pdf({ path: path.join(ROOT, 'poster.pdf'), width: '2400px', height: cssH + 'px', printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 }, pageRanges: '1' });
+  console.log('poster.pdf נוצר');
+  await browser.close();
 })();
