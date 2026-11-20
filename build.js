@@ -51,13 +51,14 @@ const quotes = [
   { t: 'אני לא שונאת. מה זו המילה הזו בכלל, שונאת?', size: 'm' },
   { t: 'אין חיים טובים, יש רגעים טובים.', size: 's', side: 'L' },
   { t: 'אם את מתחתנת עם מישהו בשביל לשנות אותו, אל תתחתני.', size: 'm' },
+  { t: 'למדתי מאבא: לפעמים חיבוק הוא יותר ממילה טובה.', size: 'm' },
 ];
 
 // ───── הגדרות הפורמטים ─────
 const FORMATS = [
   { id: 'wide', compact: false, html: 'index.html', png: 'poster.png', pdf: 'poster.pdf', vw: 2400, vh: 1400, sidePh: 2 },
   // 35×50 ס"מ = 1322.83×1889.76 פיקסלי CSS (96dpi); רינדור ב-300dpi => scale 3.125
-  { id: 'a35x50', compact: true, html: 'index-35x50.html', png: 'poster-35x50.png', pdf: 'poster-35x50.pdf', vw: 1323, vh: 1890, sidePh: { L: Number(process.env.SIDE_PH_L || 8), R: Number(process.env.SIDE_PH_R || 14) } },
+  { id: 'a35x50', compact: true, html: 'index-35x50.html', png: 'poster-35x50.png', pdf: 'poster-35x50.pdf', vw: 1323, vh: 1890, sidePh: { L: Number(process.env.SIDE_PH_L || 7), R: Number(process.env.SIDE_PH_R || 12) } },
 ];
 
 let photoPool = files.map(f => ({ src: 'photos/' + encodeURI(f), ...jpegSize(path.join(photosDir, f)) }));
@@ -119,7 +120,7 @@ const render = list => list.map(it => {
 }).join('\n');
 
 // עיצוב לפורמט 35×50: קנבס קבוע בפיקסלים, 8 עמודות
-const HERO_AR = process.env.HERO_AR || '0.68';
+const HERO_AR = process.env.HERO_AR || '0.72';
 const compactCss = `
 .poster.c{width:35cm;height:50cm;overflow:hidden;padding:34px 42px 26px;display:flex;flex-direction:column;--gap:9px}
 .poster.c::before{inset:14px}.poster.c::after{inset:23px}
