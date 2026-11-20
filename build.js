@@ -59,7 +59,7 @@ const quotes = [
 const FORMATS = [
   { id: 'wide', compact: false, html: 'index.html', png: 'poster.png', pdf: 'poster.pdf', vw: 2400, vh: 1400, sidePh: 2 },
   // 35×50 ס"מ = 1322.83×1889.76 פיקסלי CSS (96dpi); רינדור ב-300dpi => scale 3.125
-  { id: 'a35x50', compact: true, html: 'index-35x50.html', png: 'poster-35x50.png', pdf: 'poster-35x50.pdf', vw: 1323, vh: 1890, sidePh: Number(process.env.SIDE_PH || 10) },
+  { id: 'a35x50', compact: true, html: 'index-35x50.html', png: 'poster-35x50.png', pdf: 'poster-35x50.pdf', vw: 1323, vh: 1890, sidePh: Number(process.env.SIDE_PH || 12) },
 ];
 
 let photoPool = files.map(f => ({ src: 'photos/' + encodeURI(f), ...jpegSize(path.join(photosDir, f)) }));
@@ -117,7 +117,7 @@ const render = list => list.map(it => {
 }).join('\n');
 
 // עיצוב לפורמט 35×50: קנבס קבוע בפיקסלים, 8 עמודות
-const HERO_AR = process.env.HERO_AR || '0.74';
+const HERO_AR = process.env.HERO_AR || '0.64';
 const compactCss = `
 .poster.c{width:35cm;height:50cm;overflow:hidden;padding:34px 42px 26px;display:flex;flex-direction:column;--gap:9px}
 .poster.c::before{inset:14px}.poster.c::after{inset:23px}
@@ -252,6 +252,16 @@ ${cfg.compact ? '' : `@media (max-width:1500px){.band{column-count:3}}
 @media (max-width:1000px){.band{column-count:2}.mid{display:block}.side{margin-bottom:var(--gap)}.hero{margin-bottom:var(--gap)}}
 @media (max-width:560px){.band{column-count:1}}`}
 ${cfg.compact ? compactCss : ''}
+
+/* ───── מצב ארוז: עמודות בגובה שווה, בלי חורים ───── */
+.pk{display:flex !important;column-count:auto !important;gap:var(--gap);flex-direction:row !important;justify-content:flex-start !important;align-items:flex-start}
+.pk > .col{flex:1 1 0;min-width:0;display:flex !important;flex-direction:column;gap:var(--gap);margin:0 !important}
+.pk .col > *{margin:0 !important;flex:none;break-inside:auto}
+.pk .photo{display:flex}
+.pk .photo .mat{flex:1;min-width:0;min-height:0;display:flex}
+.pk .photo img{width:100%;height:100%;object-fit:cover;object-position:50% 28%}
+.pk .quote .qin{height:100%;display:flex;flex-direction:column;justify-content:center}
+.packed .hero .spacer{display:none}
 @page{margin:0}
 </style>
 </head>
@@ -266,12 +276,12 @@ ${cfg.compact ? compactCss : ''}
   </header>
 
   <main>
-    <section class="band top">
+    <section class="band top" data-cols="${cfg.compact ? 8 : 4}">
 ${render(parts.top)}
     </section>
 
     <section class="mid">
-      <div class="side l">
+      <div class="side l" data-cols="${cfg.compact ? 2 : 1}">
 ${render(parts.L)}
       </div>
       <div class="hero"><div class="spacer"></div><div class="hero-in">
@@ -279,12 +289,12 @@ ${render(parts.L)}
         <div class="light"></div>
         <div class="hq">${br(heroQuote)}</div>
       </div></div>
-      <div class="side r">
+      <div class="side r" data-cols="${cfg.compact ? 2 : 1}">
 ${render(parts.R)}
       </div>
     </section>
 
-    <section class="band bottom">
+    <section class="band bottom" data-cols="${cfg.compact ? 8 : 4}">
 ${render(parts.bottom)}
     </section>
   </main>
@@ -295,6 +305,126 @@ ${render(parts.bottom)}
     <div class="small">סבתא מצחיקה</div>
   </footer>
 </div>
+
+<script>
+(async function () {
+  await document.fonts.ready;
+  await Promise.all([...document.images].map(i => i.decode().catch(() => {})));
+  const poster = document.querySelector('.poster');
+  const compact = poster.classList.contains('c');
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:absolute;visibility:hidden;width:var(--gap)';
+  poster.appendChild(probe);
+  const gap = probe.getBoundingClientRect().width; probe.remove();
+
+  function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+  function measure(region, n) {
+    const els = [...region.children];
+    const w = (region.getBoundingClientRect().width - (n - 1) * gap) / n;
+    const m = document.createElement('div');
+    m.style.cssText = 'position:absolute;left:0;top:0;visibility:hidden;width:' + w + 'px';
+    poster.appendChild(m);
+    els.forEach(el => { el.style.height = ''; m.appendChild(el); });
+    const items = els.map(el => ({ el, q: el.classList.contains('quote'), h: el.getBoundingClientRect().height }));
+    m.remove();
+    return items;
+  }
+
+  // עלות של חלוקה לעמודות: כמה צריך לחתוך/למתוח תמונות כדי שכל העמודות יסתיימו באותו גובה
+  function colStats(c, items) {
+    let Q = 0, P = 0, qq = 0;
+    c.forEach((k, j) => { if (items[k].q) { Q += items[k].h; if (j > 0 && items[c[j - 1]].q) qq++; } else P += items[k].h; });
+    return { Q, P, qq, n: c.length };
+  }
+  function cost(cols, items, Ht) {
+    const st = cols.map(c => colStats(c, items));
+    const H = Ht || st.reduce((a, s, i) => a + s.Q + s.P + gap * (s.n - 1), 0) / cols.length;
+    let total = 0;
+    st.forEach(s => {
+      if (s.n === 0) { total += 1e6; return; }
+      const avail = H - gap * (s.n - 1) - s.Q;
+      if (s.P > 0) {
+        const r = avail / s.P;
+        if (r < 0.72) total += 60 + (0.72 - r) * 600; else if (r > 1.4) total += 20 + (r - 1.4) * 200; else total += Math.pow(Math.log(r), 2) * 12;
+      } else {
+        const sc = (H - gap * (s.n - 1)) / s.Q;
+        if (sc < 0.98) total += 80; else total += Math.pow(Math.log(sc), 2) * 5;
+      }
+      total += s.qq * 0.6;
+    });
+    return total;
+  }
+  function optimize(items, n, Ht) {
+    const R = rng(11); let best = null, bestC = 1e18;
+    for (let rs = 0; rs < 8; rs++) {
+      const order = items.map((_, i) => i);
+      if (rs > 0) for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+      let cols = Array.from({ length: n }, () => []); const sums = Array(n).fill(0);
+      order.forEach(k => { const c = sums.indexOf(Math.min(...sums)); cols[c].push(k); sums[c] += items[k].h + gap; });
+      let cur = cost(cols, items, Ht);
+      for (let it = 0; it < 9000; it++) {
+        const a = Math.floor(R() * n), b = Math.floor(R() * n);
+        if (!cols[a].length) continue;
+        const ia = Math.floor(R() * cols[a].length);
+        const cand = cols.map(c => c.slice());
+        if (R() < 0.5 && cols[b].length && a !== b) { const ib = Math.floor(R() * cols[b].length); [cand[a][ia], cand[b][ib]] = [cand[b][ib], cand[a][ia]]; }
+        else { const k = cand[a].splice(ia, 1)[0]; cand[b].splice(Math.floor(R() * (cand[b].length + 1)), 0, k); }
+        const c2 = cost(cand, items, Ht); if (c2 < cur) { cols = cand; cur = c2; }
+      }
+      if (cur < bestC) { bestC = cur; best = cols; }
+    }
+    const st = best.map(c => colStats(c, items));
+    const Hpref = Ht || st.reduce((a, s) => a + s.Q + s.P + gap * (s.n - 1), 0) / n;
+    return { cols: best, Hpref, cost: bestC };
+  }
+  function apply(region, res, items, H) {
+    region.classList.add('pk'); region.innerHTML = ''; region.style.height = H + 'px';
+    const rs = [];
+    res.cols.forEach(c => {
+      const col = document.createElement('div'); col.className = 'col'; col.style.height = H + 'px';
+      const s = colStats(c, items); const avail = H - gap * (c.length - 1);
+      c.forEach(k => {
+        const it = items[k]; let h;
+        if (s.P > 0) h = it.q ? it.h : it.h * ((avail - s.Q) / s.P); else h = it.h * (avail / s.Q);
+        it.el.style.height = h + 'px'; col.appendChild(it.el);
+      });
+      rs.push(s.P > 0 ? +((avail - s.Q) / s.P).toFixed(2) : +(avail / s.Q).toFixed(2));
+      region.appendChild(col);
+    });
+    return rs;
+  }
+
+  const top = document.querySelector('.band.top'), bottom = document.querySelector('.band.bottom');
+  const L = document.querySelector('.side.l'), Rr = document.querySelector('.side.r');
+  const mid = document.querySelector('.mid'), hero = document.querySelector('.hero'), main = document.querySelector('main');
+  const heroNat = hero.querySelector('.spacer').getBoundingClientRect().height;
+
+  const iT = measure(top, +top.dataset.cols), iB = measure(bottom, +bottom.dataset.cols);
+  const iL = measure(L, +L.dataset.cols), iR = measure(Rr, +Rr.dataset.cols);
+  const natSide = it => it.reduce((a, x) => a + x.h, 0);
+  const report = {};
+
+  let Hm;
+  if (compact) Hm = heroNat; else Hm = Math.max(heroNat, (natSide(iL) + gap * (iL.length - 1) + natSide(iR) + gap * (iR.length - 1)) / 2);
+  const rL = optimize(iL, +L.dataset.cols, Hm), rR = optimize(iR, +Rr.dataset.cols, Hm);
+  const rT0 = optimize(iT, +top.dataset.cols), rB0 = optimize(iB, +bottom.dataset.cols);
+  let Ha = rT0.Hpref, Hb = rB0.Hpref;
+  if (compact) {
+    const mh = main.clientHeight, A = mh - 2 * gap - Hm;
+    const sa = Ha / (Ha + Hb); Ha = A * sa; Hb = A - Ha;
+    main.style.justifyContent = 'flex-start'; main.style.gap = gap + 'px';
+  }
+  const rT = optimize(iT, +top.dataset.cols, Ha), rB = optimize(iB, +bottom.dataset.cols, Hb);
+  report.top = apply(top, rT, iT, Ha); report.bottom = apply(bottom, rB, iB, Hb);
+  report.L = apply(L, rL, iL, Hm); report.R = apply(Rr, rR, iR, Hm);
+  hero.style.height = Hm + 'px'; mid.style.margin = '0'; mid.style.height = Hm + 'px';
+  report.H = { Ha: Math.round(Ha), Hm: Math.round(Hm), Hb: Math.round(Hb) };
+  document.documentElement.classList.add('packed');
+  window.__pack = report;
+  document.body.dataset.packed = '1';
+})();
+</script>
 </body>
 </html>
 `;
@@ -316,6 +446,7 @@ const only = process.env.ONLY; // 'wide' | 'a35x50'
     const probe = await browser.newPage({ viewport: { width: cfg.vw, height: cfg.vh }, deviceScaleFactor: 1 });
     await probe.goto(url);
     await probe.evaluate(() => document.fonts.ready);
+    await probe.waitForFunction(() => document.body.dataset.packed === '1', null, { timeout: 60000 });
     const m = await probe.evaluate(() => {
       const poster = document.querySelector('.poster');
       const main = document.querySelector('main');
@@ -332,29 +463,30 @@ const only = process.env.ONLY; // 'wide' | 'a35x50'
       };
     });
     console.log(`[${cfg.id}]`, JSON.stringify(m));
+    console.log(`[${cfg.id}] pack`, JSON.stringify(await probe.evaluate(() => window.__pack)));
     await probe.close();
 
     if (!cfg.compact) {
       // פוסטר ארוך: להישאר מתחת למגבלת ה-16384 פיקסלים של כרום
       const dsf = Math.min(2, Math.floor((16000 / m.scrollH) * 100) / 100);
       const page = await browser.newPage({ viewport: { width: cfg.vw, height: cfg.vh }, deviceScaleFactor: dsf });
-      await page.goto(url); await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(600);
+      await page.goto(url); await page.evaluate(() => document.fonts.ready); await page.waitForFunction(() => document.body.dataset.packed === '1', null, { timeout: 60000 }); await page.waitForTimeout(600);
       await page.screenshot({ path: path.join(ROOT, cfg.png), fullPage: true });
       await page.close();
       const pdfPage = await browser.newPage({ viewport: { width: cfg.vw, height: cfg.vh } });
-      await pdfPage.goto(url); await pdfPage.evaluate(() => document.fonts.ready);
+      await pdfPage.goto(url); await pdfPage.evaluate(() => document.fonts.ready); await pdfPage.waitForFunction(() => document.body.dataset.packed === '1', null, { timeout: 60000 });
       await pdfPage.addStyleTag({ content: '@page{margin:0;size:2400px ' + m.scrollH + 'px} html,body{margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}' });
       await pdfPage.pdf({ path: path.join(ROOT, cfg.pdf), width: '2400px', height: m.scrollH + 'px', printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 }, pageRanges: '1' });
       await pdfPage.close();
     } else {
       // 35×50 ס"מ: PNG ב-300dpi (scale 3.125) ו-PDF בעמוד בגודל המדויק
       const page = await browser.newPage({ viewport: { width: cfg.vw, height: cfg.vh }, deviceScaleFactor: 300 / 96 });
-      await page.goto(url); await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(600);
+      await page.goto(url); await page.evaluate(() => document.fonts.ready); await page.waitForFunction(() => document.body.dataset.packed === '1', null, { timeout: 60000 }); await page.waitForTimeout(600);
       const el = await page.$('.poster');
       await el.screenshot({ path: path.join(ROOT, cfg.png) });
       await page.close();
       const pdfPage = await browser.newPage({ viewport: { width: cfg.vw, height: cfg.vh } });
-      await pdfPage.goto(url); await pdfPage.evaluate(() => document.fonts.ready);
+      await pdfPage.goto(url); await pdfPage.evaluate(() => document.fonts.ready); await pdfPage.waitForFunction(() => document.body.dataset.packed === '1', null, { timeout: 60000 });
       await pdfPage.addStyleTag({ content: '@page{margin:0;size:35cm 50cm} html,body{margin:0;width:35cm;height:50cm;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}' });
       await pdfPage.pdf({ path: path.join(ROOT, cfg.pdf), width: '35cm', height: '50cm', printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 }, pageRanges: '1' });
       await pdfPage.close();
