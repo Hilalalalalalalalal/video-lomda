@@ -1,4 +1,6 @@
-// בונה את דף ההנצחה של רחל חנן: index.html + poster.png
+// בונה את דף ההנצחה של רחל חנן בשני פורמטים:
+//   1. פוסטר ארוך (poster.png / poster.pdf)
+//   2. פוסטר 35×50 ס"מ להדפסה (poster-35x50.png ב-300dpi / poster-35x50.pdf)
 // שימוש: הניחו תמונות בתיקיית photos/ והריצו:  node build.js
 const fs = require('fs');
 const path = require('path');
@@ -28,9 +30,10 @@ function jpegSize(file) {
 // הציטוט שמוטמע בתוך מסגרת התמונה המרכזית
 const heroQuote = 'תמיד תמצא את עצמך\nעם הראש למעלה…';
 
-// ציטוטים. size: s=קצר ובולט, m=רגיל, l=ארוך. side: קצרים שמתאימים לעמודות הצד
+// ציטוטים. size: s=קצר ובולט, m=רגיל, l=ארוך.
+// side: קצרים שמתאימים לעמודות הצד בכל הפורמטים; c: עמודות צד בפורמט הקטן בלבד
 const quotes = [
-  { t: 'אף מילה למורגנשטיין.', size: 's' },
+  { t: 'אף מילה למורגנשטיין.', size: 's', c: 'R' },
   { t: 'תדעי לך דבר אחד, אל תלמדי אחרים.', size: 'm' },
   { t: 'אל תשאיר כלום בבטן. מותר להגיד הכל, רק תלוי איך.', size: 'm' },
   { t: 'מותר שקרים לבנים לטובת שלום בית.', size: 'm' },
@@ -43,34 +46,24 @@ const quotes = [
   { t: 'אני נותנת משהו ושכחתי שנתתי.', size: 'm' },
   { t: 'לא כואב כשמקבלים מכה, רק כשפוגעים בלב…', size: 'm' },
   { t: 'תמיד עושה תחרות הורדות ידיים… עד היום.', size: 'm' },
-  { t: '״אני סבתא מצחיקה…״ כשתרצי לקנות משהו לעצמך, אבל רק לעצמך, תבואי אליי, אני אתן לך כסף.', size: 'l' },
-  { t: 'לא, לא, זה לא בסדר.', size: 's', side: 'R' },
+  { t: '״אני סבתא מצחיקה…״', size: 's', side: 'R' },
+  { t: 'כשתרצי לקנות משהו לעצמך, אבל רק לעצמך, תבואי אליי, אני אתן לך כסף.', size: 'l' },
   { t: 'את לא יכולה לדבר אליהם ככה.', size: 'm' },
-  { t: 'לשנוא זה רגש נוראי…', size: 'm' },
+  { t: 'לשנוא זה רגש נוראי…', size: 'm', c: 'L' },
   { t: 'אני לא שונאת. מה זו המילה הזו בכלל, שונאת?', size: 'm' },
   { t: 'אין חיים טובים, יש רגעים טובים.', size: 's', side: 'L' },
   { t: 'אם את מתחתנת עם מישהו בשביל לשנות אותו, אל תתחתני.', size: 'm' },
 ];
 
-// ───── חלוקת התוכן: טבעת סביב התמונה המרכזית ─────
+// ───── הגדרות הפורמטים ─────
+const FORMATS = [
+  { id: 'wide', compact: false, html: 'index.html', png: 'poster.png', pdf: 'poster.pdf', vw: 2400, vh: 1400, sidePh: 2 },
+  // 35×50 ס"מ = 1322.83×1889.76 פיקסלי CSS (96dpi); רינדור ב-300dpi => scale 3.125
+  { id: 'a35x50', compact: true, html: 'index-35x50.html', png: 'poster-35x50.png', pdf: 'poster-35x50.pdf', vw: 1323, vh: 1890, sidePh: Number(process.env.SIDE_PH || 10) },
+];
+
 let photoPool = files.map(f => ({ src: 'photos/' + encodeURI(f), ...jpegSize(path.join(photosDir, f)) }));
 if (!photoPool.length) photoPool = Array.from({ length: 9 }, () => ({ ph: true, w: 4, h: 5 }));
-
-const sideQuotes = { L: quotes.filter(q => q.side === 'L'), R: quotes.filter(q => q.side === 'R') };
-const restQuotes = quotes.filter(q => !q.side);
-
-// עמודות צד: שתי תמונות לרוחב ושני ציטוטים קצרים בכל צד
-const landscape = photoPool.map((p, i) => ({ p, i, d: Math.abs(p.w / p.h - 1.4) }))
-  .filter(o => o.p.w / o.p.h > 1.15).sort((a, b) => a.d - b.d);
-const sidePick = { L: [], R: [] };
-for (const o of landscape) {
-  const s = sidePick.L.length <= sidePick.R.length ? 'L' : 'R';
-  if (sidePick[s].length < 2) sidePick[s].push(o.i);
-  if (sidePick.L.length === 2 && sidePick.R.length === 2) break;
-}
-const used = new Set([...sidePick.L, ...sidePick.R]);
-const sidePhotos = { L: sidePick.L.map(i => photoPool[i]), R: sidePick.R.map(i => photoPool[i]) };
-const restPhotos = photoPool.filter((_, i) => !used.has(i));
 
 // שזירה אחידה של תמונות וציטוטים
 function mix(ps, qs) {
@@ -83,17 +76,36 @@ function mix(ps, qs) {
   }
   return out;
 }
-const sideMix = s => {
-  const out = [], ps = sidePhotos[s], qs = sideQuotes[s];
-  const n = Math.max(ps.length, qs.length);
-  for (let i = 0; i < n; i++) { if (ps[i]) out.push({ type: 'p', ...ps[i] }); if (qs[i]) out.push({ type: 'q', ...qs[i] }); }
-  return out;
-};
 
-const all = mix(restPhotos, restQuotes);
-const half = Math.ceil(all.length / 2);
-const topItems = all.slice(0, half);
-const bottomItems = all.slice(half);
+const br = s => s.replace(/\n/g, '<br>');
+
+function compose(cfg) {
+  const sideOf = q => q.side || (cfg.compact ? q.c : null);
+  const sideQuotes = { L: quotes.filter(q => sideOf(q) === 'L'), R: quotes.filter(q => sideOf(q) === 'R') };
+  const restQuotes = quotes.filter(q => !sideOf(q));
+
+  // תמונות לרוחב לעמודות הצד, קרובות ליחס 1.4
+  const landscape = photoPool.map((p, i) => ({ p, i, d: Math.abs(p.w / p.h - 1.4) }))
+    .filter(o => o.p.w / o.p.h > 1.15).sort((a, b) => a.d - b.d);
+  const sidePick = { L: [], R: [] };
+  for (const o of landscape) {
+    const s = sidePick.L.length <= sidePick.R.length ? 'L' : 'R';
+    if (sidePick[s].length < cfg.sidePh) sidePick[s].push(o.i);
+    if (sidePick.L.length === cfg.sidePh && sidePick.R.length === cfg.sidePh) break;
+  }
+  const used = new Set([...sidePick.L, ...sidePick.R]);
+  const sidePhotos = { L: sidePick.L.map(i => photoPool[i]), R: sidePick.R.map(i => photoPool[i]) };
+  const restPhotos = photoPool.filter((_, i) => !used.has(i));
+
+  const sideMix = s => (cfg.compact
+    ? mix(sidePhotos[s], sideQuotes[s])
+    : (() => { const out = [], ps = sidePhotos[s], qs = sideQuotes[s]; const n = Math.max(ps.length, qs.length);
+        for (let i = 0; i < n; i++) { if (ps[i]) out.push({ type: 'p', ...ps[i] }); if (qs[i]) out.push({ type: 'q', ...qs[i] }); } return out; })());
+
+  const all = mix(restPhotos, restQuotes);
+  const half = Math.ceil(all.length / 2);
+  return { top: all.slice(0, half), bottom: all.slice(half), L: sideMix('L'), R: sideMix('R') };
+}
 
 const render = list => list.map(it => {
   if (it.type === 'p') {
@@ -104,9 +116,44 @@ const render = list => list.map(it => {
   return `<blockquote class="quote sz-${it.size}"><div class="qin"><span class="mark">״</span><p>${it.t}</p></div></blockquote>`;
 }).join('\n');
 
-const br = s => s.replace(/\n/g, '<br>');
+// עיצוב לפורמט 35×50: קנבס קבוע בפיקסלים, 8 עמודות
+const HERO_AR = process.env.HERO_AR || '0.74';
+const compactCss = `
+.poster.c{width:35cm;height:50cm;overflow:hidden;padding:34px 42px 26px;display:flex;flex-direction:column;--gap:9px}
+.poster.c::before{inset:14px}.poster.c::after{inset:23px}
+.c header{padding:2px 0 8px;flex:none}
+.c .orn{gap:14px}.c .orn i{width:150px}.c .orn b{font-size:15px}
+.c h1{font-size:80px;margin-top:2px}
+.c .years{font-size:29px;margin-top:4px;letter-spacing:.32em}
+.c header .orn.bottom{margin-top:6px}
+.c main{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-height:0}
+.c .band{column-count:8;column-gap:var(--gap)}
+.c .band > *{margin-bottom:var(--gap)}
+.c .mid{grid-template-columns:repeat(8,1fr);column-gap:var(--gap);margin:0}
+.c .side{display:block;column-count:2;column-gap:var(--gap);align-self:start}
+.c .side > *{break-inside:avoid;margin-bottom:var(--gap)}
+.c .side.l{grid-column:1 / 3}.c .side.r{grid-column:7 / 9}
+.c .hero{grid-column:3 / 7;box-shadow:0 0 50px rgba(201,161,92,.38),0 14px 40px -10px rgba(0,0,0,.8)}
+.c .hero::before{inset:-9px}
+.c .hero .spacer{aspect-ratio:${HERO_AR}}
+.c .hero-in{inset:5px}
+.c .hero-in .hq{font-size:34px;left:5%;top:22%}
+.c .photo{padding:2px}.c .photo .mat{padding:4px}
+.c .quote{padding:2px}
+.c .qin{padding:16px 12px 9px}
+.c .qin::before{inset:4px}
+.c .mark{font-size:62px}
+.c .sz-s p{font-size:27px;line-height:1.12}
+.c .sz-m p{font-size:19px;line-height:1.3}
+.c .sz-l p{font-size:17px;line-height:1.3}
+.c footer{flex:none;padding:4px 0 0}
+.c footer .big{font-size:34px;margin-top:0;line-height:1.05}
+.c footer .small{display:none}
+.c footer .orn{display:none}
+`;
 
-const html = `<!doctype html>
+function makeHtml(cfg, parts) {
+  return `<!doctype html>
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -201,13 +248,15 @@ footer .big{margin-top:clamp(10px,1.4vw,34px);font-family:var(--hand);font-size:
   background:var(--foil-text);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 footer .small{font-size:clamp(14px,1.5vw,34px);letter-spacing:.3em;margin-top:.5em;color:var(--gold-d)}
 
-@media (max-width:1500px){.band{column-count:3}}
+${cfg.compact ? '' : `@media (max-width:1500px){.band{column-count:3}}
 @media (max-width:1000px){.band{column-count:2}.mid{display:block}.side{margin-bottom:var(--gap)}.hero{margin-bottom:var(--gap)}}
-@media (max-width:560px){.band{column-count:1}}
+@media (max-width:560px){.band{column-count:1}}`}
+${cfg.compact ? compactCss : ''}
+@page{margin:0}
 </style>
 </head>
 <body>
-<div class="poster">
+<div class="poster${cfg.compact ? ' c' : ''}">
   <div class="stars"></div>
   <header>
     <div class="orn"><i></i><b>✦</b><i></i></div>
@@ -218,12 +267,12 @@ footer .small{font-size:clamp(14px,1.5vw,34px);letter-spacing:.3em;margin-top:.5
 
   <main>
     <section class="band top">
-${render(topItems)}
+${render(parts.top)}
     </section>
 
     <section class="mid">
       <div class="side l">
-${render(sideMix('L'))}
+${render(parts.L)}
       </div>
       <div class="hero"><div class="spacer"></div><div class="hero-in">
         <img src="assets/hero.jpg" alt="רחל חנן">
@@ -231,12 +280,12 @@ ${render(sideMix('L'))}
         <div class="hq">${br(heroQuote)}</div>
       </div></div>
       <div class="side r">
-${render(sideMix('R'))}
+${render(parts.R)}
       </div>
     </section>
 
     <section class="band bottom">
-${render(bottomItems)}
+${render(parts.bottom)}
     </section>
   </main>
 
@@ -249,36 +298,68 @@ ${render(bottomItems)}
 </body>
 </html>
 `;
+}
 
-fs.writeFileSync(path.join(ROOT, 'index.html'), html);
-console.log(`index.html נוצר: ${photoPool.length} תמונות, ${quotes.length} ציטוטים (למעלה ${topItems.length}, צדדים ${sideMix('L').length}+${sideMix('R').length}, למטה ${bottomItems.length})`);
+const only = process.env.ONLY; // 'wide' | 'a35x50'
 
-// רינדור ל-PNG. מדידת גובה כדי להישאר מתחת למגבלת ה-16384 פיקסלים של כרום
 (async () => {
   const { chromium } = require('playwright');
   const browser = await chromium.launch();
-  const url = 'file://' + path.join(ROOT, 'index.html');
-  const probe = await browser.newPage({ viewport: { width: 2400, height: 1400 }, deviceScaleFactor: 1 });
-  await probe.goto(url);
-  await probe.evaluate(() => document.fonts.ready);
-  const cssH = await probe.evaluate(() => document.documentElement.scrollHeight);
-  const heroBox = await probe.evaluate(() => { const r = document.querySelector('.hero').getBoundingClientRect(); return { top: r.top + scrollY, h: r.height }; });
-  await probe.close();
-  const dsf = Math.min(2, Math.floor((16000 / cssH) * 100) / 100);
-  console.log(`גובה ${cssH}px, scale ${dsf}, מרכז התמונה ${Math.round(heroBox.top + heroBox.h / 2)} (מרכז הפוסטר ${Math.round(cssH / 2)})`);
-  const page = await browser.newPage({ viewport: { width: 2400, height: 1400 }, deviceScaleFactor: dsf });
-  await page.goto(url);
-  await page.evaluate(() => document.fonts.ready);
-  await page.waitForTimeout(600);
-  await page.screenshot({ path: path.join(ROOT, 'poster.png'), fullPage: true });
-  console.log('poster.png נוצר');
 
-  // PDF להדפסה: טקסט וקטורי, תמונות ברזולוציה המקורית, עמוד אחד באורך הפוסטר
-  const pdfPage = await browser.newPage({ viewport: { width: 2400, height: 1400 } });
-  await pdfPage.goto(url);
-  await pdfPage.evaluate(() => document.fonts.ready);
-  await pdfPage.addStyleTag({ content: '@page{margin:0;size:2400px ' + cssH + 'px} html,body{margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}' });
-  await pdfPage.pdf({ path: path.join(ROOT, 'poster.pdf'), width: '2400px', height: cssH + 'px', printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 }, pageRanges: '1' });
-  console.log('poster.pdf נוצר');
+  for (const cfg of FORMATS) {
+    if (only && only !== cfg.id) continue;
+    const parts = compose(cfg);
+    fs.writeFileSync(path.join(ROOT, cfg.html), makeHtml(cfg, parts));
+    console.log(`[${cfg.id}] ${cfg.html}: ${photoPool.length} תמונות, ${quotes.length} ציטוטים (למעלה ${parts.top.length}, צדדים ${parts.L.length}+${parts.R.length}, למטה ${parts.bottom.length})`);
+    const url = 'file://' + path.join(ROOT, cfg.html);
+
+    const probe = await browser.newPage({ viewport: { width: cfg.vw, height: cfg.vh }, deviceScaleFactor: 1 });
+    await probe.goto(url);
+    await probe.evaluate(() => document.fonts.ready);
+    const m = await probe.evaluate(() => {
+      const poster = document.querySelector('.poster');
+      const main = document.querySelector('main');
+      const r = el => el.getBoundingClientRect();
+      const hero = r(document.querySelector('.hero'));
+      // האם התוכן חורג מהקנבס?
+      const sideH = [...document.querySelectorAll('.side')].map(e => Math.round(e.scrollHeight)); const kids = [...document.querySelectorAll('.band, .mid, header, footer')].map(e => Math.round(r(e).height));
+      return {
+        scrollH: document.documentElement.scrollHeight,
+        posterH: Math.round(r(poster).height), mainScroll: main.scrollHeight, mainClient: main.clientHeight,
+        heroMid: Math.round(hero.top + scrollY + hero.height / 2), sections: kids, sideH,
+        lastBottom: Math.round(Math.max(...[...document.querySelectorAll('.band.bottom > *')].map(e => r(e).bottom + scrollY))),
+        footerTop: Math.round(r(document.querySelector('footer')).top + scrollY),
+      };
+    });
+    console.log(`[${cfg.id}]`, JSON.stringify(m));
+    await probe.close();
+
+    if (!cfg.compact) {
+      // פוסטר ארוך: להישאר מתחת למגבלת ה-16384 פיקסלים של כרום
+      const dsf = Math.min(2, Math.floor((16000 / m.scrollH) * 100) / 100);
+      const page = await browser.newPage({ viewport: { width: cfg.vw, height: cfg.vh }, deviceScaleFactor: dsf });
+      await page.goto(url); await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(600);
+      await page.screenshot({ path: path.join(ROOT, cfg.png), fullPage: true });
+      await page.close();
+      const pdfPage = await browser.newPage({ viewport: { width: cfg.vw, height: cfg.vh } });
+      await pdfPage.goto(url); await pdfPage.evaluate(() => document.fonts.ready);
+      await pdfPage.addStyleTag({ content: '@page{margin:0;size:2400px ' + m.scrollH + 'px} html,body{margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}' });
+      await pdfPage.pdf({ path: path.join(ROOT, cfg.pdf), width: '2400px', height: m.scrollH + 'px', printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 }, pageRanges: '1' });
+      await pdfPage.close();
+    } else {
+      // 35×50 ס"מ: PNG ב-300dpi (scale 3.125) ו-PDF בעמוד בגודל המדויק
+      const page = await browser.newPage({ viewport: { width: cfg.vw, height: cfg.vh }, deviceScaleFactor: 300 / 96 });
+      await page.goto(url); await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(600);
+      const el = await page.$('.poster');
+      await el.screenshot({ path: path.join(ROOT, cfg.png) });
+      await page.close();
+      const pdfPage = await browser.newPage({ viewport: { width: cfg.vw, height: cfg.vh } });
+      await pdfPage.goto(url); await pdfPage.evaluate(() => document.fonts.ready);
+      await pdfPage.addStyleTag({ content: '@page{margin:0;size:35cm 50cm} html,body{margin:0;width:35cm;height:50cm;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}' });
+      await pdfPage.pdf({ path: path.join(ROOT, cfg.pdf), width: '35cm', height: '50cm', printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 }, pageRanges: '1' });
+      await pdfPage.close();
+    }
+    console.log(`[${cfg.id}] ${cfg.png} + ${cfg.pdf} נוצרו`);
+  }
   await browser.close();
 })();

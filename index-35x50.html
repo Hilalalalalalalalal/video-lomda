@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>רחל חנן 1929-2026</title>
+<style>
+@font-face{font-family:'Heebo';font-weight:300;font-style:normal;src:url('fonts/Heebo-Light.ttf') format('truetype');}
+@font-face{font-family:'Gveret Levin';font-weight:400;font-style:normal;src:url('fonts/GveretLevin.ttf') format('truetype');}
+:root{
+  --night:#120d08; --panel:#140f09; --gold:#c9a15c; --gold-l:#f0dba4; --gold-d:#8a6a2f;
+  --foil:linear-gradient(135deg,#7d5f2a 0%,#e9cf8c 22%,#b8903f 45%,#f7e7b8 62%,#a07a35 82%,#6f5322 100%);
+  --foil-text:linear-gradient(170deg,#fff3cf 0%,#e8c97f 38%,#c49a4a 62%,#f3dc9d 100%);
+  --hand:'Gveret Levin','Heebo',cursive; --light:'Heebo',sans-serif;
+  --gap:clamp(18px,2.2vw,52px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--night)}
+body{font-family:var(--light);font-weight:300;color:var(--gold-l);background:var(--night);overflow-x:hidden}
+.poster{position:relative;isolation:isolate;padding:clamp(26px,3.4vw,84px) clamp(22px,3.6vw,88px) clamp(26px,3vw,70px);
+  background:
+   radial-gradient(ellipse 55% 14% at 50% 0%, rgba(240,205,130,.13), transparent 70%),
+   radial-gradient(ellipse 50% 12% at 50% 100%, rgba(240,205,130,.09), transparent 70%),
+   var(--night)}
+/* מסגרת זהב כפולה סביב הפוסטר */
+.poster::before,.poster::after{content:"";position:absolute;pointer-events:none;z-index:6}
+.poster::before{inset:clamp(10px,1.3vw,32px);border:2px solid transparent;border-image:var(--foil) 1}
+.poster::after{inset:clamp(18px,2.1vw,50px);border:1px solid rgba(201,161,92,.45)}
+.stars{position:absolute;inset:0;z-index:-1;opacity:.5;
+  background-image:
+   radial-gradient(1.5px 1.5px at 8% 4%, #f1dfb9, transparent),radial-gradient(1px 1px at 22% 9%, #f1dfb9, transparent),
+   radial-gradient(1.5px 1.5px at 88% 6%, #f1dfb9, transparent),radial-gradient(1px 1px at 76% 12%, #f1dfb9, transparent),
+   radial-gradient(1px 1px at 14% 30%, #f1dfb9, transparent),radial-gradient(1px 1px at 93% 38%, #f1dfb9, transparent),
+   radial-gradient(1px 1px at 4% 55%, #f1dfb9, transparent),radial-gradient(1.5px 1.5px at 96% 62%, #f1dfb9, transparent),
+   radial-gradient(1px 1px at 10% 82%, #f1dfb9, transparent),radial-gradient(1px 1px at 90% 90%, #f1dfb9, transparent),
+   radial-gradient(1px 1px at 50% 98%, #f1dfb9, transparent)}
+
+/* ───── כותרת ───── */
+header{position:relative;text-align:center;padding:clamp(30px,4vw,100px) 0 clamp(36px,4.6vw,110px)}
+.orn{display:flex;align-items:center;justify-content:center;gap:22px;color:var(--gold)}
+.orn i{display:block;height:1px;width:clamp(70px,13vw,320px);background:linear-gradient(90deg,transparent,var(--gold))}
+.orn i:last-child{background:linear-gradient(270deg,transparent,var(--gold))}
+.orn b{font-weight:300;font-size:clamp(16px,1.9vw,44px);line-height:1}
+h1{margin-top:clamp(14px,1.8vw,40px);font-weight:300;font-size:clamp(64px,12vw,300px);line-height:1;letter-spacing:.02em;
+  background:var(--foil-text);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 40px rgba(201,161,92,.25))}
+.years{margin-top:clamp(8px,1.3vw,30px);font-size:clamp(22px,3.8vw,94px);letter-spacing:.34em;direction:ltr;unicode-bidi:isolate;
+  background:var(--foil-text);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+header .orn.bottom{margin-top:clamp(18px,2.2vw,50px)}
+
+/* ───── פריסה: טבעת סביב התמונה המרכזית ───── */
+.band{column-count:4;column-gap:var(--gap)}
+.band > *{break-inside:avoid;display:block;margin-bottom:var(--gap)}
+.mid{display:grid;grid-template-columns:repeat(4,1fr);column-gap:var(--gap);margin:0 0 var(--gap)}
+.side{display:flex;flex-direction:column;justify-content:space-between;gap:var(--gap)}
+.side.l{grid-column:1}.side.r{grid-column:4}
+
+/* ───── התמונה המרכזית ───── */
+.hero{grid-column:2 / 4;position:relative;align-self:stretch;background:var(--foil);
+  box-shadow:0 0 clamp(50px,6vw,160px) rgba(201,161,92,.38),0 30px 80px -20px rgba(0,0,0,.8)}
+.hero::before{content:"";position:absolute;inset:calc(clamp(5px,.55vw,13px) * -2.4);border:1px solid rgba(201,161,92,.55);pointer-events:none}
+.hero .spacer{aspect-ratio:2153/3214;width:100%}
+.hero-in{position:absolute;inset:clamp(5px,.55vw,13px);overflow:hidden;background:var(--panel)}
+.hero-in img{display:block;width:100%;height:100%;object-fit:cover;object-position:88% 10%}
+.hero-in .light{position:absolute;inset:0;mix-blend-mode:screen;pointer-events:none;
+  background:radial-gradient(ellipse 60% 45% at 50% 62%, rgba(201,161,92,.20), transparent 70%)}
+.hero-in .hq{position:absolute;left:5%;top:23%;width:42%;font-family:var(--hand);font-size:clamp(28px,3.4vw,84px);line-height:1.22;
+  transform:rotate(-4deg);background:var(--foil-text);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 2px 14px rgba(0,0,0,.7))}
+.hero-in .hq::after{content:"✦";display:block;margin-top:.45em;font-family:var(--light);font-size:.38em;-webkit-text-fill-color:var(--gold)}
+.hero-in::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 120px rgba(0,0,0,.45)}
+
+/* ───── תמונות במסגרות זהב ───── */
+.photo{background:var(--foil);padding:clamp(3px,.3vw,7px);box-shadow:0 18px 40px -14px rgba(0,0,0,.85),0 0 24px rgba(201,161,92,.08)}
+.photo .mat{background:var(--panel);padding:clamp(6px,.8vw,18px)}
+.photo img{display:block;width:100%;height:auto}
+.photo.ph .mat{display:flex;align-items:center;justify-content:center;color:var(--gold);font-family:var(--hand);font-size:2em}
+
+/* ───── ציטוטים ───── */
+.quote{position:relative;background:var(--foil);padding:clamp(2px,.2vw,5px);box-shadow:0 18px 40px -14px rgba(0,0,0,.85),0 0 24px rgba(201,161,92,.1)}
+.qin{position:relative;background:linear-gradient(165deg,#1f1710,#120d08 70%);padding:clamp(26px,3vw,70px) clamp(24px,2.7vw,64px) clamp(22px,2.4vw,56px);overflow:hidden}
+.qin::before{content:"";position:absolute;inset:clamp(7px,.8vw,18px);border:1px solid rgba(201,161,92,.38);pointer-events:none}
+.mark{position:absolute;top:-.04em;right:.16em;font-family:var(--hand);font-size:clamp(80px,9vw,230px);line-height:1;color:var(--gold);opacity:.38}
+.quote p{position:relative;font-family:var(--hand);line-height:1.38;padding-top:.45em;
+  background:var(--foil-text);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sz-s p{font-size:clamp(34px,4.3vw,108px);line-height:1.18}
+.sz-m p{font-size:clamp(26px,3.05vw,76px)}
+.sz-l p{font-size:clamp(23px,2.55vw,64px)}
+
+.emo{background:none;-webkit-text-fill-color:initial;font-family:'Noto Color Emoji',sans-serif}
+footer{position:relative;text-align:center;padding:clamp(10px,2vw,50px) 0 clamp(26px,3vw,70px)}
+footer .big{margin-top:clamp(10px,1.4vw,34px);font-family:var(--hand);font-size:clamp(36px,5.4vw,140px);line-height:1.2;
+  background:var(--foil-text);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+footer .small{font-size:clamp(14px,1.5vw,34px);letter-spacing:.3em;margin-top:.5em;color:var(--gold-d)}
+
+
+
+.poster.c{width:35cm;height:50cm;overflow:hidden;padding:34px 42px 26px;display:flex;flex-direction:column;--gap:9px}
+.poster.c::before{inset:14px}.poster.c::after{inset:23px}
+.c header{padding:2px 0 8px;flex:none}
+.c .orn{gap:14px}.c .orn i{width:150px}.c .orn b{font-size:15px}
+.c h1{font-size:80px;margin-top:2px}
+.c .years{font-size:29px;margin-top:4px;letter-spacing:.32em}
+.c header .orn.bottom{margin-top:6px}
+.c main{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-height:0}
+.c .band{column-count:8;column-gap:var(--gap)}
+.c .band > *{margin-bottom:var(--gap)}
+.c .mid{grid-template-columns:repeat(8,1fr);column-gap:var(--gap);margin:0}
+.c .side{display:block;column-count:2;column-gap:var(--gap);align-self:start}
+.c .side > *{break-inside:avoid;margin-bottom:var(--gap)}
+.c .side.l{grid-column:1 / 3}.c .side.r{grid-column:7 / 9}
+.c .hero{grid-column:3 / 7;box-shadow:0 0 50px rgba(201,161,92,.38),0 14px 40px -10px rgba(0,0,0,.8)}
+.c .hero::before{inset:-9px}
+.c .hero .spacer{aspect-ratio:0.74}
+.c .hero-in{inset:5px}
+.c .hero-in .hq{font-size:34px;left:5%;top:22%}
+.c .photo{padding:2px}.c .photo .mat{padding:4px}
+.c .quote{padding:2px}
+.c .qin{padding:16px 12px 9px}
+.c .qin::before{inset:4px}
+.c .mark{font-size:62px}
+.c .sz-s p{font-size:27px;line-height:1.12}
+.c .sz-m p{font-size:19px;line-height:1.3}
+.c .sz-l p{font-size:17px;line-height:1.3}
+.c footer{flex:none;padding:4px 0 0}
+.c footer .big{font-size:34px;margin-top:0;line-height:1.05}
+.c footer .small{display:none}
+.c footer .orn{display:none}
+
+@page{margin:0}
+</style>
+</head>
+<body>
+<div class="poster c">
+  <div class="stars"></div>
+  <header>
+    <div class="orn"><i></i><b>✦</b><i></i></div>
+    <h1>רחל חנן</h1>
+    <div class="years">1929 – 2026</div>
+    <div class="orn bottom"><i></i><b>◆</b><i></i></div>
+  </header>
+
+  <main>
+    <section class="band top">
+<figure class="photo"><div class="mat"><img src="photos/01.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/03.jpg" alt=""></div></figure>
+<blockquote class="quote sz-m"><div class="qin"><span class="mark">״</span><p>תדעי לך דבר אחד, אל תלמדי אחרים.</p></div></blockquote>
+<figure class="photo"><div class="mat"><img src="photos/04.jpg" alt=""></div></figure>
+<blockquote class="quote sz-m"><div class="qin"><span class="mark">״</span><p>אל תשאיר כלום בבטן. מותר להגיד הכל, רק תלוי איך.</p></div></blockquote>
+<figure class="photo"><div class="mat"><img src="photos/06.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/08.jpg" alt=""></div></figure>
+<blockquote class="quote sz-m"><div class="qin"><span class="mark">״</span><p>מותר שקרים לבנים לטובת שלום בית.</p></div></blockquote>
+<figure class="photo"><div class="mat"><img src="photos/09.jpg" alt=""></div></figure>
+<blockquote class="quote sz-l"><div class="qin"><span class="mark">״</span><p>אם יש לך שקל, תן שקל. אם יש לך 1000 ש״ח, תן 1000 ש״ח… רק אל תצפה לקבל משהו בתמורה.</p></div></blockquote>
+<figure class="photo"><div class="mat"><img src="photos/10.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/11.jpg" alt=""></div></figure>
+<blockquote class="quote sz-m"><div class="qin"><span class="mark">״</span><p>את תקבלי חתיכת עוגה קטנה כי את צריכה לשמור על עצמך <span class="emo">😅</span></p></div></blockquote>
+<figure class="photo"><div class="mat"><img src="photos/12.jpg" alt=""></div></figure>
+<blockquote class="quote sz-l"><div class="qin"><span class="mark">״</span><p>אם קבצן כבר השפיל את עצמו לבקש כסף, אל תשפיל אותו יותר בזה שלא תתן לו.</p></div></blockquote>
+<figure class="photo"><div class="mat"><img src="photos/21.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/24.jpg" alt=""></div></figure>
+<blockquote class="quote sz-m"><div class="qin"><span class="mark">״</span><p>להיות מנץ׳ – את יודעת מה זה מנץ׳?</p></div></blockquote>
+    </section>
+
+    <section class="mid">
+      <div class="side l">
+<figure class="photo"><div class="mat"><img src="photos/07.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/14.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/16.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/18.jpg" alt=""></div></figure>
+<blockquote class="quote sz-s"><div class="qin"><span class="mark">״</span><p>את יודעת מי את?</p></div></blockquote>
+<figure class="photo"><div class="mat"><img src="photos/29.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/34.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/38.jpg" alt=""></div></figure>
+<blockquote class="quote sz-m"><div class="qin"><span class="mark">״</span><p>לשנוא זה רגש נוראי…</p></div></blockquote>
+<figure class="photo"><div class="mat"><img src="photos/42.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/05.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/20.jpg" alt=""></div></figure>
+<blockquote class="quote sz-s"><div class="qin"><span class="mark">״</span><p>אין חיים טובים, יש רגעים טובים.</p></div></blockquote>
+      </div>
+      <div class="hero"><div class="spacer"></div><div class="hero-in">
+        <img src="assets/hero.jpg" alt="רחל חנן">
+        <div class="light"></div>
+        <div class="hq">תמיד תמצא את עצמך<br>עם הראש למעלה…</div>
+      </div></div>
+      <div class="side r">
+<figure class="photo"><div class="mat"><img src="photos/13.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/15.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/17.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/22.jpg" alt=""></div></figure>
+<blockquote class="quote sz-s"><div class="qin"><span class="mark">״</span><p>אף מילה למורגנשטיין.</p></div></blockquote>
+<figure class="photo"><div class="mat"><img src="photos/31.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/36.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/40.jpg" alt=""></div></figure>
+<blockquote class="quote sz-s"><div class="qin"><span class="mark">״</span><p>מילה מילה.</p></div></blockquote>
+<figure class="photo"><div class="mat"><img src="photos/27.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/19.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/23.jpg" alt=""></div></figure>
+<blockquote class="quote sz-s"><div class="qin"><span class="mark">״</span><p>״אני סבתא מצחיקה…״</p></div></blockquote>
+      </div>
+    </section>
+
+    <section class="band bottom">
+<figure class="photo"><div class="mat"><img src="photos/25.jpg" alt=""></div></figure>
+<blockquote class="quote sz-m"><div class="qin"><span class="mark">״</span><p>אני נותנת משהו ושכחתי שנתתי.</p></div></blockquote>
+<figure class="photo"><div class="mat"><img src="photos/26.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/28.jpg" alt=""></div></figure>
+<blockquote class="quote sz-m"><div class="qin"><span class="mark">״</span><p>לא כואב כשמקבלים מכה, רק כשפוגעים בלב…</p></div></blockquote>
+<figure class="photo"><div class="mat"><img src="photos/30.jpg" alt=""></div></figure>
+<blockquote class="quote sz-m"><div class="qin"><span class="mark">״</span><p>תמיד עושה תחרות הורדות ידיים… עד היום.</p></div></blockquote>
+<figure class="photo"><div class="mat"><img src="photos/32.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/33.jpg" alt=""></div></figure>
+<blockquote class="quote sz-l"><div class="qin"><span class="mark">״</span><p>כשתרצי לקנות משהו לעצמך, אבל רק לעצמך, תבואי אליי, אני אתן לך כסף.</p></div></blockquote>
+<figure class="photo"><div class="mat"><img src="photos/35.jpg" alt=""></div></figure>
+<blockquote class="quote sz-m"><div class="qin"><span class="mark">״</span><p>את לא יכולה לדבר אליהם ככה.</p></div></blockquote>
+<figure class="photo"><div class="mat"><img src="photos/37.jpg" alt=""></div></figure>
+<figure class="photo"><div class="mat"><img src="photos/39.jpg" alt=""></div></figure>
+<blockquote class="quote sz-m"><div class="qin"><span class="mark">״</span><p>אני לא שונאת. מה זו המילה הזו בכלל, שונאת?</p></div></blockquote>
+<figure class="photo"><div class="mat"><img src="photos/41.jpg" alt=""></div></figure>
+<blockquote class="quote sz-m"><div class="qin"><span class="mark">״</span><p>אם את מתחתנת עם מישהו בשביל לשנות אותו, אל תתחתני.</p></div></blockquote>
+    </section>
+  </main>
+
+  <footer>
+    <div class="orn"><i></i><b>✦</b><i></i></div>
+    <div class="big">זכרה לברכה</div>
+    <div class="small">סבתא מצחיקה</div>
+  </footer>
+</div>
+</body>
+</html>
