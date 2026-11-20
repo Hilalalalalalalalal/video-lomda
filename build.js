@@ -27,6 +27,12 @@ const quotes = [
   { t: 'לא כואב כשמקבלים מכה, רק כשפוגעים בלב…', size: 'm' },
   { t: 'תמיד עושה תחרות הורדות ידיים… עד היום.', size: 'm' },
   { t: '״אני סבתא מצחיקה…״ כשתרצי לקנות משהו לעצמך, אבל רק לעצמך, תבואי אליי, אני אתן לך כסף.', size: 'l' },
+  { t: 'לא, לא, זה לא בסדר.', size: 's' },
+  { t: 'את לא יכולה לדבר אליהם ככה.', size: 'm' },
+  { t: 'לשנוא זה רגש נוראי…', size: 'm' },
+  { t: 'אני לא שונאת. מה זו המילה הזו בכלל, שונאת?', size: 'm' },
+  { t: 'אין חיים טובים, יש רגעים טובים.', size: 's' },
+  { t: 'אם את מתחתנת עם מישהו בשביל לשנות אותו, אל תתחתני.', size: 'm' },
 ];
 
 // אם אין מספיק תמונות מציגים מסגרות ריקות (טיוטה)
@@ -36,17 +42,13 @@ const photoItems = photos.length
   ? photos.map(f => ({ src: 'photos/' + encodeURI(f) }))
   : Array.from({ length: PLACEHOLDERS }, (_, i) => ({ ph: ratios[i % ratios.length] }));
 
-// שזירה: תמונה, ציטוט, ציטוט, תמונה...
-const items = [];
-let pi = 0, qi = 0;
-const pattern = ['p', 'q', 'q', 'p', 'q', 'p', 'q', 'q'];
-let k = 0;
-while (pi < photoItems.length || qi < quotes.length) {
-  const kind = pattern[k++ % pattern.length];
-  if (kind === 'p' && pi < photoItems.length) items.push({ type: 'p', ...photoItems[pi++] });
-  else if (qi < quotes.length) items.push({ type: 'q', ...quotes[qi++] });
-  else if (pi < photoItems.length) items.push({ type: 'p', ...photoItems[pi++] });
-}
+// שזירה: התמונות מפוזרות באופן אחיד בין הציטוטים
+const items = quotes.map(q => ({ type: 'q', ...q }));
+const total = photoItems.length + quotes.length;
+photoItems.forEach((ph, i) => {
+  const pos = Math.round((i + 0.5) * total / photoItems.length) - 1 + i * 0;
+  items.splice(Math.min(pos, items.length), 0, { type: 'p', ...ph });
+});
 
 const tones = ['t-cream', 't-rose', 't-sage', 't-gold', 't-sand'];
 let qn = 0;
