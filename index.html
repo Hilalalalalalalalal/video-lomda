@@ -20,7 +20,7 @@ body{
     var(--bg);
   min-height:100vh;
 }
-.page{max-width:1800px;margin:0 auto;padding:clamp(24px,4vw,80px) clamp(16px,3.5vw,72px) clamp(28px,4vw,72px)}
+.page{max-width:2400px;margin:0 auto;padding:clamp(24px,4vw,80px) clamp(16px,3.5vw,72px) clamp(28px,4vw,72px)}
 
 header{text-align:center;padding:clamp(28px,5vw,90px) 0 clamp(36px,5vw,84px)}
 .orn{display:flex;align-items:center;justify-content:center;gap:18px;color:var(--gold);margin-bottom:clamp(14px,2vw,28px)}
@@ -31,7 +31,7 @@ h1{font-weight:300;font-size:clamp(54px,11vw,210px);line-height:1;letter-spacing
 .years{margin-top:clamp(10px,1.6vw,26px);font-size:clamp(22px,3.6vw,68px);letter-spacing:.28em;color:var(--gold);direction:ltr;unicode-bidi:isolate}
 .sub{margin-top:clamp(16px,2vw,34px);font-size:clamp(14px,1.5vw,26px);color:var(--muted);letter-spacing:.08em}
 
-.grid{column-count:3;column-gap:clamp(14px,1.8vw,32px)}
+.grid{column-count:4;column-gap:clamp(14px,1.8vw,32px)}
 .grid > *{break-inside:avoid;display:block;margin-bottom:clamp(14px,1.8vw,32px)}
 
 .photo{background:#fff;padding:clamp(6px,.8vw,14px);border-radius:6px;box-shadow:0 10px 30px -12px rgba(80,50,30,.35),0 2px 6px rgba(80,50,30,.08)}
@@ -53,9 +53,10 @@ h1{font-weight:300;font-size:clamp(54px,11vw,210px);line-height:1;letter-spacing
 footer{text-align:center;margin-top:clamp(20px,3vw,56px);color:var(--muted);font-size:clamp(14px,1.5vw,26px);letter-spacing:.12em}
 footer .orn{margin:0 0 14px}
 
+@media (max-width:1500px){.grid{column-count:3}}
 @media (max-width:1000px){.grid{column-count:2}}
 @media (max-width:560px){.grid{column-count:1}}
-@media print{.grid{column-count:3}}
+@media print{.grid{column-count:4}}
 </style>
 </head>
 <body>
@@ -67,35 +68,68 @@ footer .orn{margin:0 0 14px}
     <div class="sub">סבתא מצחיקה</div>
   </header>
   <main class="grid">
-<blockquote class="quote t-cream sz-s"><span class="mark">״</span><p>אף מילה למורגנשטיין.</p></blockquote>
 <figure class="photo"><img src="photos/01.jpg" alt=""></figure>
-<blockquote class="quote t-rose sz-m"><span class="mark">״</span><p>תדעי לך דבר אחד, אל תלמדי אחרים.</p></blockquote>
-<blockquote class="quote t-sage sz-m"><span class="mark">״</span><p>אל תשאיר כלום בבטן. מותר להגיד הכל, רק תלוי איך.</p></blockquote>
 <figure class="photo"><img src="photos/02.jpg" alt=""></figure>
-<blockquote class="quote t-gold sz-m"><span class="mark">״</span><p>מותר שקרים לבנים לטובת שלום בית.</p></blockquote>
-<blockquote class="quote t-sand sz-m"><span class="mark">״</span><p>תמיד תמצא את עצמך עם הראש למעלה…</p></blockquote>
+<blockquote class="quote t-cream sz-s"><span class="mark">״</span><p>אף מילה למורגנשטיין.</p></blockquote>
 <figure class="photo"><img src="photos/03.jpg" alt=""></figure>
-<blockquote class="quote t-cream sz-l"><span class="mark">״</span><p>אם יש לך שקל, תן שקל. אם יש לך 1000 ש״ח, תן 1000 ש״ח… רק אל תצפה לקבל משהו בתמורה.</p></blockquote>
-<blockquote class="quote t-rose sz-s"><span class="mark">״</span><p>מילה מילה.</p></blockquote>
-<blockquote class="quote t-sage sz-m"><span class="mark">״</span><p>את תקבלי חתיכת עוגה קטנה כי את צריכה לשמור על עצמך 😅</p></blockquote>
 <figure class="photo"><img src="photos/04.jpg" alt=""></figure>
-<blockquote class="quote t-gold sz-l"><span class="mark">״</span><p>אם קבצן כבר השפיל את עצמו לבקש כסף, אל תשפיל אותו יותר בזה שלא תתן לו.</p></blockquote>
-<blockquote class="quote t-sand sz-s"><span class="mark">״</span><p>את יודעת מי את?</p></blockquote>
+<blockquote class="quote t-rose sz-m"><span class="mark">״</span><p>תדעי לך דבר אחד, אל תלמדי אחרים.</p></blockquote>
 <figure class="photo"><img src="photos/05.jpg" alt=""></figure>
-<blockquote class="quote t-cream sz-m"><span class="mark">״</span><p>להיות מנץ׳ – את יודעת מה זה מנץ׳?</p></blockquote>
-<blockquote class="quote t-rose sz-m"><span class="mark">״</span><p>אני נותנת משהו ושכחתי שנתתי.</p></blockquote>
 <figure class="photo"><img src="photos/06.jpg" alt=""></figure>
-<blockquote class="quote t-sage sz-m"><span class="mark">״</span><p>לא כואב כשמקבלים מכה, רק כשפוגעים בלב…</p></blockquote>
-<blockquote class="quote t-gold sz-m"><span class="mark">״</span><p>תמיד עושה תחרות הורדות ידיים… עד היום.</p></blockquote>
-<blockquote class="quote t-sand sz-l"><span class="mark">״</span><p>״אני סבתא מצחיקה…״ כשתרצי לקנות משהו לעצמך, אבל רק לעצמך, תבואי אליי, אני אתן לך כסף.</p></blockquote>
+<blockquote class="quote t-sage sz-m"><span class="mark">״</span><p>אל תשאיר כלום בבטן. מותר להגיד הכל, רק תלוי איך.</p></blockquote>
 <figure class="photo"><img src="photos/07.jpg" alt=""></figure>
-<blockquote class="quote t-cream sz-s"><span class="mark">״</span><p>לא, לא, זה לא בסדר.</p></blockquote>
-<blockquote class="quote t-rose sz-m"><span class="mark">״</span><p>את לא יכולה לדבר אליהם ככה.</p></blockquote>
 <figure class="photo"><img src="photos/08.jpg" alt=""></figure>
-<blockquote class="quote t-sage sz-m"><span class="mark">״</span><p>לשנוא זה רגש נוראי…</p></blockquote>
-<blockquote class="quote t-gold sz-m"><span class="mark">״</span><p>אני לא שונאת. מה זו המילה הזו בכלל, שונאת?</p></blockquote>
+<blockquote class="quote t-gold sz-m"><span class="mark">״</span><p>מותר שקרים לבנים לטובת שלום בית.</p></blockquote>
 <figure class="photo"><img src="photos/09.jpg" alt=""></figure>
+<figure class="photo"><img src="photos/10.jpg" alt=""></figure>
+<blockquote class="quote t-sand sz-m"><span class="mark">״</span><p>תמיד תמצא את עצמך עם הראש למעלה…</p></blockquote>
+<figure class="photo"><img src="photos/11.jpg" alt=""></figure>
+<figure class="photo"><img src="photos/12.jpg" alt=""></figure>
+<blockquote class="quote t-cream sz-l"><span class="mark">״</span><p>אם יש לך שקל, תן שקל. אם יש לך 1000 ש״ח, תן 1000 ש״ח… רק אל תצפה לקבל משהו בתמורה.</p></blockquote>
+<figure class="photo"><img src="photos/13.jpg" alt=""></figure>
+<figure class="photo"><img src="photos/14.jpg" alt=""></figure>
+<blockquote class="quote t-rose sz-s"><span class="mark">״</span><p>מילה מילה.</p></blockquote>
+<figure class="photo"><img src="photos/15.jpg" alt=""></figure>
+<figure class="photo"><img src="photos/16.jpg" alt=""></figure>
+<blockquote class="quote t-sage sz-m"><span class="mark">״</span><p>את תקבלי חתיכת עוגה קטנה כי את צריכה לשמור על עצמך 😅</p></blockquote>
+<figure class="photo"><img src="photos/17.jpg" alt=""></figure>
+<figure class="photo"><img src="photos/18.jpg" alt=""></figure>
+<blockquote class="quote t-gold sz-l"><span class="mark">״</span><p>אם קבצן כבר השפיל את עצמו לבקש כסף, אל תשפיל אותו יותר בזה שלא תתן לו.</p></blockquote>
+<figure class="photo"><img src="photos/19.jpg" alt=""></figure>
+<figure class="photo"><img src="photos/20.jpg" alt=""></figure>
+<blockquote class="quote t-sand sz-s"><span class="mark">״</span><p>את יודעת מי את?</p></blockquote>
+<figure class="photo"><img src="photos/21.jpg" alt=""></figure>
+<figure class="photo"><img src="photos/22.jpg" alt=""></figure>
+<blockquote class="quote t-cream sz-m"><span class="mark">״</span><p>להיות מנץ׳ – את יודעת מה זה מנץ׳?</p></blockquote>
+<figure class="photo"><img src="photos/23.jpg" alt=""></figure>
+<figure class="photo"><img src="photos/24.jpg" alt=""></figure>
+<blockquote class="quote t-rose sz-m"><span class="mark">״</span><p>אני נותנת משהו ושכחתי שנתתי.</p></blockquote>
+<figure class="photo"><img src="photos/25.jpg" alt=""></figure>
+<figure class="photo"><img src="photos/26.jpg" alt=""></figure>
+<blockquote class="quote t-sage sz-m"><span class="mark">״</span><p>לא כואב כשמקבלים מכה, רק כשפוגעים בלב…</p></blockquote>
+<figure class="photo"><img src="photos/27.jpg" alt=""></figure>
+<figure class="photo"><img src="photos/28.jpg" alt=""></figure>
+<blockquote class="quote t-gold sz-m"><span class="mark">״</span><p>תמיד עושה תחרות הורדות ידיים… עד היום.</p></blockquote>
+<figure class="photo"><img src="photos/29.jpg" alt=""></figure>
+<figure class="photo"><img src="photos/30.jpg" alt=""></figure>
+<blockquote class="quote t-sand sz-l"><span class="mark">״</span><p>״אני סבתא מצחיקה…״ כשתרצי לקנות משהו לעצמך, אבל רק לעצמך, תבואי אליי, אני אתן לך כסף.</p></blockquote>
+<figure class="photo"><img src="photos/31.jpg" alt=""></figure>
+<figure class="photo"><img src="photos/32.jpg" alt=""></figure>
+<blockquote class="quote t-cream sz-s"><span class="mark">״</span><p>לא, לא, זה לא בסדר.</p></blockquote>
+<figure class="photo"><img src="photos/33.jpg" alt=""></figure>
+<figure class="photo"><img src="photos/34.jpg" alt=""></figure>
+<blockquote class="quote t-rose sz-m"><span class="mark">״</span><p>את לא יכולה לדבר אליהם ככה.</p></blockquote>
+<figure class="photo"><img src="photos/35.jpg" alt=""></figure>
+<figure class="photo"><img src="photos/36.jpg" alt=""></figure>
+<blockquote class="quote t-sage sz-m"><span class="mark">״</span><p>לשנוא זה רגש נוראי…</p></blockquote>
+<figure class="photo"><img src="photos/37.jpg" alt=""></figure>
+<figure class="photo"><img src="photos/38.jpg" alt=""></figure>
+<blockquote class="quote t-gold sz-m"><span class="mark">״</span><p>אני לא שונאת. מה זו המילה הזו בכלל, שונאת?</p></blockquote>
+<figure class="photo"><img src="photos/39.jpg" alt=""></figure>
+<figure class="photo"><img src="photos/40.jpg" alt=""></figure>
 <blockquote class="quote t-sand sz-s"><span class="mark">״</span><p>אין חיים טובים, יש רגעים טובים.</p></blockquote>
+<figure class="photo"><img src="photos/41.jpg" alt=""></figure>
+<figure class="photo"><img src="photos/42.jpg" alt=""></figure>
 <blockquote class="quote t-cream sz-m"><span class="mark">״</span><p>אם את מתחתנת עם מישהו בשביל לשנות אותו, אל תתחתני.</p></blockquote>
   </main>
   <footer>

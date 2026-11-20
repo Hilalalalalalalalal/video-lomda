@@ -84,7 +84,7 @@ body{
     var(--bg);
   min-height:100vh;
 }
-.page{max-width:1800px;margin:0 auto;padding:clamp(24px,4vw,80px) clamp(16px,3.5vw,72px) clamp(28px,4vw,72px)}
+.page{max-width:2400px;margin:0 auto;padding:clamp(24px,4vw,80px) clamp(16px,3.5vw,72px) clamp(28px,4vw,72px)}
 
 header{text-align:center;padding:clamp(28px,5vw,90px) 0 clamp(36px,5vw,84px)}
 .orn{display:flex;align-items:center;justify-content:center;gap:18px;color:var(--gold);margin-bottom:clamp(14px,2vw,28px)}
@@ -95,7 +95,7 @@ h1{font-weight:300;font-size:clamp(54px,11vw,210px);line-height:1;letter-spacing
 .years{margin-top:clamp(10px,1.6vw,26px);font-size:clamp(22px,3.6vw,68px);letter-spacing:.28em;color:var(--gold);direction:ltr;unicode-bidi:isolate}
 .sub{margin-top:clamp(16px,2vw,34px);font-size:clamp(14px,1.5vw,26px);color:var(--muted);letter-spacing:.08em}
 
-.grid{column-count:3;column-gap:clamp(14px,1.8vw,32px)}
+.grid{column-count:4;column-gap:clamp(14px,1.8vw,32px)}
 .grid > *{break-inside:avoid;display:block;margin-bottom:clamp(14px,1.8vw,32px)}
 
 .photo{background:#fff;padding:clamp(6px,.8vw,14px);border-radius:6px;box-shadow:0 10px 30px -12px rgba(80,50,30,.35),0 2px 6px rgba(80,50,30,.08)}
@@ -117,9 +117,10 @@ h1{font-weight:300;font-size:clamp(54px,11vw,210px);line-height:1;letter-spacing
 footer{text-align:center;margin-top:clamp(20px,3vw,56px);color:var(--muted);font-size:clamp(14px,1.5vw,26px);letter-spacing:.12em}
 footer .orn{margin:0 0 14px}
 
+@media (max-width:1500px){.grid{column-count:3}}
 @media (max-width:1000px){.grid{column-count:2}}
 @media (max-width:560px){.grid{column-count:1}}
-@media print{.grid{column-count:3}}
+@media print{.grid{column-count:4}}
 </style>
 </head>
 <body>
@@ -149,7 +150,7 @@ console.log(`index.html נוצר: ${photos.length} תמונות, ${quotes.length
 (async () => {
   const { chromium } = require('playwright');
   const browser = await chromium.launch();
-  const page = await browser.newPage({ viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 2 });
+  const page = await browser.newPage({ viewport: { width: 2400, height: 1400 }, deviceScaleFactor: 2 });
   await page.goto('file://' + path.join(ROOT, 'index.html'));
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(400);
