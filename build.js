@@ -122,7 +122,7 @@ const render = list => list.map(it => {
 }).join('\n');
 
 // עיצוב לפורמט 35×50: קנבס קבוע בפיקסלים, 8 עמודות
-const HERO_AR = process.env.HERO_AR || '0.82';
+const HERO_AR = process.env.HERO_AR || '0.85';
 const COLS = Number(process.env.COLS || 8), SC = Number(process.env.SIDE_COLS || 2);
 const compactCss = `
 .poster.c{width:35cm;height:50cm;overflow:hidden;padding:32px 42px 24px;display:flex;flex-direction:column;--gap:8px}
