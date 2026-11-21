@@ -227,6 +227,7 @@ footer .small{font-size:clamp(14px,1.5vw,34px);letter-spacing:.3em;margin-top:.5
 </div>
 
 <script>
+window.__SPREAD = 0.6;
 (async function () {
   await document.fonts.ready;
   await Promise.all([...document.images].map(i => i.decode().catch(() => {})));
@@ -257,10 +258,21 @@ footer .small{font-size:clamp(14px,1.5vw,34px);letter-spacing:.3em;margin-top:.5
     c.forEach((k, j) => { if (items[k].q) { Q += items[k].h; if (j > 0 && items[c[j - 1]].q) qq++; } else P += items[k].h; });
     return { Q, P, qq, n: c.length };
   }
+  function spread(cols, items) {
+    const pos = [];
+    cols.forEach((c, ci) => { let y = 0; c.forEach(k => { if (items[k].q) pos.push([ci, y + items[k].h / 2]); y += items[k].h + gap; }); });
+    let pen = 0;
+    for (let a = 0; a < pos.length; a++) for (let b = a + 1; b < pos.length; b++) {
+      const dc = Math.abs(pos[a][0] - pos[b][0]), dy = Math.abs(pos[a][1] - pos[b][1]);
+      if (dc <= 1 && dy < 170) pen += (dc === 0 ? 4 : 2.4) * (1 - dy / 170);
+    }
+    return pen * (window.__SPREAD || 0);
+  }
   function cost(cols, items, Ht) {
     const st = cols.map(c => colStats(c, items));
     const H = Ht || st.reduce((a, s, i) => a + s.Q + s.P + gap * (s.n - 1), 0) / cols.length;
     let total = 0;
+    total += spread(cols, items);
     st.forEach(s => {
       if (s.n === 0) { total += 1e6; return; }
       const avail = H - gap * (s.n - 1) - s.Q;

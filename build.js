@@ -85,8 +85,26 @@ function compose(cfg) {
   const feature = cfg.compact ? photoPool.find(p => p.src && p.src.includes('family-tree')) : null;
   const pool = feature ? photoPool.filter(p => p !== feature) : photoPool;
   const phCount = sd => (typeof cfg.sidePh === 'number' ? cfg.sidePh : cfg.sidePh[sd]);
-  const sideQuotes = { L: quotes.filter(q => sideOf(q) === 'L'), R: quotes.filter(q => sideOf(q) === 'R') };
-  const restQuotes = quotes.filter(q => !sideOf(q));
+  let sideQuotes = { L: quotes.filter(q => sideOf(q) === 'L'), R: quotes.filter(q => sideOf(q) === 'R') };
+  let restQuotes = quotes.filter(q => !sideOf(q));
+  let topQ = null, botQ = null;
+  if (cfg.compact) {
+    // פיזור ציטוטים אחיד בכל ארבעת האזורים לפי שטח, בסדר מעורב
+    const area = { top: 8 * 420, bottom: 8 * 455, L: 2 * 470, R: 2 * 724 };
+    const tot = Object.values(area).reduce((a, b) => a + b, 0);
+    const quota = {}; let given = 0;
+    for (const k of Object.keys(area)) { quota[k] = Math.floor(quotes.length * area[k] / tot); given += quota[k]; }
+    for (const k of ['bottom', 'top', 'R', 'L']) { if (given >= quotes.length) break; quota[k]++; given++; }
+    const got = { top: [], bottom: [], L: [], R: [] };
+    const order = ['top', 'R', 'bottom', 'L'];
+    // סדר חלוקה: ציטוטים קצרים/ארוכים מתחלפים בין האזורים
+    quotes.forEach((q, i) => {
+      let k = order[i % 4], tries = 0;
+      while (got[k].length >= quota[k] && tries++ < 4) k = order[(order.indexOf(k) + 1) % 4];
+      got[k].push(q);
+    });
+    sideQuotes = { L: got.L, R: got.R }; topQ = got.top; botQ = got.bottom; restQuotes = [];
+  }
 
   // תמונות לרוחב לעמודות הצד, קרובות ליחס 1.4
   const landscape = pool.map((p, i) => ({ p, i, d: Math.abs(p.w / p.h - 1.4) }))
@@ -107,9 +125,15 @@ function compose(cfg) {
     : (() => { const out = [], ps = sidePhotos[s], qs = sideQuotes[s]; const n = Math.max(ps.length, qs.length);
         for (let i = 0; i < n; i++) { if (ps[i]) out.push({ type: 'p', ...ps[i] }); if (qs[i]) out.push({ type: 'q', ...qs[i] }); } return out; })());
 
-  const all = mix(restPhotos, restQuotes);
-  const half = Math.ceil(all.length / 2);
-  return { top: all.slice(0, half), bottom: all.slice(half), L: sideMix('L'), R: sideMix('R'), feature };
+  let topItems, bottomItems;
+  if (cfg.compact) {
+    const ph = Math.ceil(restPhotos.length * 420 / (420 + 455));
+    topItems = mix(restPhotos.slice(0, ph), topQ); bottomItems = mix(restPhotos.slice(ph), botQ);
+  } else {
+    const all = mix(restPhotos, restQuotes); const half = Math.ceil(all.length / 2);
+    topItems = all.slice(0, half); bottomItems = all.slice(half);
+  }
+  return { top: topItems, bottom: bottomItems, L: sideMix('L'), R: sideMix('R'), feature };
 }
 
 const render = list => list.map(it => {
@@ -316,6 +340,7 @@ ${render(parts.bottom)}
 </div>
 
 <script>
+window.__SPREAD = ${cfg.compact ? 1 : 0.6};
 (async function () {
   await document.fonts.ready;
   await Promise.all([...document.images].map(i => i.decode().catch(() => {})));
@@ -346,10 +371,21 @@ ${render(parts.bottom)}
     c.forEach((k, j) => { if (items[k].q) { Q += items[k].h; if (j > 0 && items[c[j - 1]].q) qq++; } else P += items[k].h; });
     return { Q, P, qq, n: c.length };
   }
+  function spread(cols, items) {
+    const pos = [];
+    cols.forEach((c, ci) => { let y = 0; c.forEach(k => { if (items[k].q) pos.push([ci, y + items[k].h / 2]); y += items[k].h + gap; }); });
+    let pen = 0;
+    for (let a = 0; a < pos.length; a++) for (let b = a + 1; b < pos.length; b++) {
+      const dc = Math.abs(pos[a][0] - pos[b][0]), dy = Math.abs(pos[a][1] - pos[b][1]);
+      if (dc <= 1 && dy < 170) pen += (dc === 0 ? 4 : 2.4) * (1 - dy / 170);
+    }
+    return pen * (window.__SPREAD || 0);
+  }
   function cost(cols, items, Ht) {
     const st = cols.map(c => colStats(c, items));
     const H = Ht || st.reduce((a, s, i) => a + s.Q + s.P + gap * (s.n - 1), 0) / cols.length;
     let total = 0;
+    total += spread(cols, items);
     st.forEach(s => {
       if (s.n === 0) { total += 1e6; return; }
       const avail = H - gap * (s.n - 1) - s.Q;
